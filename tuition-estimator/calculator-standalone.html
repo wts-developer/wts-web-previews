@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tuition Savings Calculator</title>
+  <script src="https://use.typekit.net/lgi4kha.js"></script>
+  <script>try { Typekit.load({ async: true }); } catch (e) {}</script>
+  <style>
+    body { margin: 0; background: #fff; }
+    .host-section { max-width: 1240px; margin: 0 auto; padding: 40px 24px 24px; }
+  </style>
+</head>
+<body>
+  <div class="host-section">
+    <!-- ==============================================================
+         Below is the same integration wts.edu uses: one container div
+         plus the widget script (inlined here so this page is a single
+         shareable file; production references the script by URL, see
+         webflow/embed-snippet.html).
+         ============================================================== -->
+    <div id="wts-cost-estimator"></div>
+    <script>
+/*!
+ * WTS Online Program Cost Estimator — embeddable widget
+ * Renders into <div id="wts-cost-estimator"><\/div> (created automatically
+ * next to this script tag if the div is missing). All markup and styles
+ * live in a Shadow DOM, so nothing collides with the host page's CSS.
+ * Source: https://github.com/wts-developer/wts-web (projects/tuition-estimator)
+ */
+(function () {
+  "use strict";
+
+  var CSS = "\n    :host {\n      --wts-red: #8c2233;\n      --wts-red-dark: #6e1726;\n      --wts-gold: #bd8b41;\n      --wts-gray: #56575a;\n      --wts-paper: #f7f6f3;\n      --wts-ink: #202124;\n      --lx-forest: #02434d;\n      --accent: var(--wts-red);\n      --accent-dark: var(--wts-red-dark);\n      --accent-soft: #f5e9eb;\n      --chart-student: var(--wts-gray);\n      --chart-raised: var(--wts-gold);\n      --chart-match: var(--accent);\n      --serif: kepler-std-display, kepler-std, \"Kepler Std Display\", \"Kepler Std\", Georgia, \"Times New Roman\", serif;\n      --sans: \"Lato\", Arial, Helvetica, sans-serif;\n      --mono: \"Lato\", Arial, Helvetica, sans-serif;\n      --border: rgba(86, 87, 90, .18);\n      --shadow: 0 18px 50px rgba(31, 32, 35, .10);\n      --radius-xl: 8px;\n      --radius-lg: 6px;\n      --radius-md: 4px;\n    }\n\n    * { box-sizing: border-box; }\n\n    /* Author display rules (e.g. .mini's flex) must not defeat [hidden]. */\n    [hidden] { display: none !important; }\n\n    .wts-estimator-app {\n      margin: 0;\n      font-family: var(--sans);\n      color: var(--wts-ink);\n      background:\n        radial-gradient(circle at 10% 8%, rgba(189, 139, 65, .16), transparent 32rem),\n        radial-gradient(circle at 90% 0%, rgba(140, 34, 51, .11), transparent 30rem),\n        linear-gradient(180deg, #fbfaf8 0%, #f2f0ec 100%);\n      line-height: 1.45;\n    }\n\n    .wrap {\n      max-width: 1180px;\n      margin: 0 auto;\n      padding: clamp(18px, 3vw, 44px);\n    }\n\n    .brand-frame {\n      position: relative;\n    }\n\n    .hero {\n      position: relative;\n      overflow: hidden;\n      display: grid;\n      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);\n      gap: clamp(22px, 4vw, 46px);\n      align-items: end;\n      min-height: 295px;\n      border-radius: var(--radius-xl);\n      padding: clamp(26px, 5vw, 56px);\n      color: #fff;\n      background: linear-gradient(135deg, var(--accent-dark), var(--accent));\n      box-shadow: var(--shadow);\n    }\n\n    .hero::after {\n      content: \"W\";\n      position: absolute;\n      right: -60px;\n      top: -95px;\n      font-family: var(--serif);\n      font-size: clamp(18rem, 31vw, 28rem);\n      line-height: 1;\n      color: rgba(255,255,255,.055);\n      pointer-events: none;\n    }\n\n    .hero > * { position: relative; z-index: 1; }\n\n    .eyebrow {\n      display: inline-flex;\n      align-items: center;\n      gap: 12px;\n      margin-bottom: 18px;\n      font-family: var(--mono);\n      font-size: .72rem;\n      text-transform: uppercase;\n      letter-spacing: .18em;\n      color: rgba(255,255,255,.78);\n    }\n\n    .eyebrow::before {\n      content: \"\";\n      width: 38px;\n      height: 1px;\n      background: var(--wts-gold);\n    }\n\n    h1 {\n      margin: 0;\n      font-family: var(--serif);\n      font-weight: 400;\n      font-size: clamp(2.8rem, 7vw, 5.8rem);\n      letter-spacing: -.055em;\n      line-height: .92;\n      max-width: 900px;\n    }\n\n    .hero-copy {\n      max-width: 660px;\n      margin: 22px 0 0;\n      color: rgba(255,255,255,.84);\n      font-size: clamp(1rem, 1.35vw, 1.18rem);\n    }\n\n    .hero-card {\n      border: 1px solid rgba(255,255,255,.18);\n      border-radius: 6px;\n      background: rgba(255,255,255,.10);\n      backdrop-filter: blur(8px);\n      padding: 22px;\n    }\n\n    .small {\n      font-family: var(--mono);\n      font-size: .72rem;\n      letter-spacing: .14em;\n      text-transform: uppercase;\n      color: rgba(255,255,255,.74);\n      margin-bottom: 14px;\n    }\n\n    .hero-stat {\n      display: grid;\n      grid-template-columns: minmax(0, 1fr) auto;\n      gap: 12px;\n      padding: 12px 0;\n      border-top: 1px solid rgba(255,255,255,.15);\n    }\n\n    .hero-stat:first-of-type { border-top: 0; padding-top: 0; }\n    .hero-stat span { color: rgba(255,255,255,.78); }\n    .hero-stat strong { color: white; font-family: var(--mono); white-space: nowrap; }\n\n    .section {\n      margin-top: 28px;\n    }\n\n    /* Headings match the site's display serif exactly: kepler-std-display\n       at weight 300 with normal tracking (see .display-h1 on wts.edu). */\n    .section-heading {\n      margin: 0 0 14px;\n      font-family: var(--serif);\n      font-weight: 300;\n      font-size: clamp(2rem, 4vw, 3.2rem);\n      letter-spacing: normal;\n      line-height: 1;\n    }\n\n    .section-note {\n      color: var(--wts-gray);\n      margin: -4px 0 18px;\n      max-width: 720px;\n    }\n\n    .program-switch {\n      display: grid;\n      grid-template-columns: repeat(3, minmax(0, 1fr));\n      gap: 14px;\n    }\n\n    .program-card {\n      width: 100%;\n      text-align: left;\n      cursor: pointer;\n      /* buttons don't inherit page font/color by default, and iOS Safari\n         paints unstyled button text blue */\n      font-family: var(--sans);\n      color: var(--wts-ink);\n      /* buttons also center their content vertically; when grid rows\n         stretch cards to equal heights, shorter content would float to\n         the middle. Top-align it instead. */\n      display: flex;\n      flex-direction: column;\n      align-items: flex-start;\n      justify-content: flex-start;\n      border: 1px solid var(--border);\n      border-radius: 6px;\n      background: rgba(255,255,255,.82);\n      box-shadow: 0 8px 24px rgba(31,32,35,.05);\n      padding: 22px;\n      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;\n    }\n\n    .program-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }\n    .program-card[aria-pressed=\"true\"] { border-color: var(--accent); background: #fff; }\n\n    .program-card .code {\n      font-family: var(--mono);\n      letter-spacing: .16em;\n      text-transform: uppercase;\n      font-size: .72rem;\n      color: var(--accent);\n      margin-top: 10px;\n    }\n\n    .program-card .name {\n      font-family: var(--serif);\n      font-size: clamp(1.8rem, 3vw, 2.65rem);\n      line-height: 1;\n      letter-spacing: -.04em;\n      margin-bottom: 10px;\n    }\n\n    .program-card .desc {\n      color: var(--wts-gray);\n      font-size: .96rem;\n      max-width: 54ch;\n    }\n\n    /* Modality pills sit on their own row under the acronym so placement\n       is identical on every card at every viewport width. */\n    .card-badges {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 6px;\n      margin: 2px 0 8px;\n    }\n\n    .card-badges .online-badge {\n      margin-left: 0;\n      transform: none;\n    }\n\n    .online-badge {\n      display: inline-block;\n      vertical-align: middle;\n      margin-left: 6px;\n      padding: 3px 9px;\n      border: 1px solid rgba(189,139,65,.55);\n      border-radius: 999px;\n      background: rgba(189,139,65,.12);\n      font-family: var(--sans);\n      font-size: .62rem;\n      font-weight: 700;\n      letter-spacing: .12em;\n      text-transform: uppercase;\n      color: #8e662f;\n      transform: translateY(-4px);\n    }\n\n    .card-badges .online-badge.alt-modality {\n      border-color: rgba(96,96,96,.3);\n      background: transparent;\n      color: #767676;\n      cursor: pointer;\n    }\n\n    .card-badges .online-badge.alt-modality:hover,\n    .card-badges .online-badge.alt-modality:focus {\n      text-decoration: underline;\n      color: #4a4a4a;\n    }\n\n    .online-badge.campus {\n      border-color: rgba(140,34,51,.45);\n      background: rgba(140,34,51,.10);\n      color: #6e1726;\n    }\n\n    .funded-note {\n      margin-top: 6px;\n      font-size: .84rem;\n      font-weight: 700;\n      color: #8c2233;\n    }\n\n    /* On-campus (100% funded) programs: nothing to estimate, so the inputs\n       panel hides and the results card spans the full width. */\n    .funded-mode .left-column { display: none; }\n\n    /* Course-priced programs (ThM, DMin, PhD) bill per course, so the\n       per-credit start-term rate increase and pace options do not apply. */\n    .course-priced-mode .field:has(> #startTerm),\n    .course-priced-mode details.advanced:not(.scholarship-reference) { display: none; }\n\n    /* Future features, not introduced yet: the estimate summary, the\n       term-by-term table (including its email/review/print action row), and\n       the market comparison. Markup and logic stay in place; unhide these\n       sections to bring them back. */\n    .full-width-summary-section,\n    .full-width-term-section,\n    .market-comparison-section { display: none; }\n\n    /* Centered header for the whole calculator section. Hidden on the\n       standalone page (which has its own hero); the embed unhides it. */\n    .calculator-header {\n      display: none;\n      text-align: center;\n      margin: 0 0 30px;\n    }\n\n    .calc-eyebrow {\n      font-family: var(--mono);\n      text-transform: uppercase;\n      letter-spacing: .2em;\n      font-size: .74rem;\n      font-weight: 700;\n      color: var(--wts-gray);\n      margin-bottom: 10px;\n    }\n\n    .calc-title {\n      margin: 0;\n      font-family: var(--serif);\n      font-weight: 300;\n      font-size: clamp(2.2rem, 4vw, 3rem);\n      letter-spacing: normal;\n      line-height: 1.05;\n    }\n\n    .step-label {\n      font-family: var(--mono);\n      text-transform: uppercase;\n      letter-spacing: .18em;\n      font-size: .72rem;\n      font-weight: 700;\n      color: #8e662f;\n      margin-bottom: 8px;\n    }\n\n    /* Steps flow vertically: programs, then financial information, then\n       the results card. */\n    .builder-grid {\n      display: grid;\n      grid-template-columns: 1fr;\n      gap: 24px;\n      align-items: start;\n      margin-top: 8px;\n    }\n\n    /* Both columns start with a step label and a section heading; kill the\n       generic .section top margin so the two columns align on desktop. */\n    .builder-grid .section {\n      margin-top: 0;\n    }\n\n    /* Italic annotation style shared by the scholarship disclaimer and the\n       auto-update note: set off from the content above it, not run in as a\n       paragraph. */\n    .annotation {\n      margin: 14px 0 0;\n      font-style: italic;\n      font-size: .85rem;\n      line-height: 1.5;\n      color: var(--wts-gray);\n    }\n\n    .results-section {\n      margin-top: 24px;\n    }\n\n    /* Contact CTA below the results card: the clear next step after an\n       estimate is a conversation, not yet an application. Echoes the\n       site's gold main-button (uppercase, square corners). */\n    .contact-cta {\n      text-align: center;\n      margin-top: 26px;\n    }\n\n    .contact-cta .contact-button {\n      display: inline-block;\n      background: var(--wts-gold);\n      color: #fff;\n      font-family: var(--sans);\n      font-weight: 700;\n      font-size: .95rem;\n      letter-spacing: .14em;\n      text-transform: uppercase;\n      text-decoration: none;\n      padding: 17px 46px;\n      border-radius: 2px;\n      transition: background .16s ease;\n    }\n\n    .contact-cta .contact-button:hover {\n      background: #a3763a;\n    }\n\n    .panel, .card {\n      background: rgba(255,255,255,.94);\n      border: 1px solid var(--border);\n      border-radius: var(--radius-lg);\n      box-shadow: var(--shadow);\n      overflow: hidden;\n    }\n\n    .panel-header {\n      padding: 18px 22px;\n      border-bottom: 1px solid var(--border);\n      background: linear-gradient(90deg, rgba(140,34,51,.07), rgba(189,139,65,.08)), #fff;\n    }\n\n    .panel-title {\n      margin: 0;\n      font-family: var(--serif);\n      font-size: clamp(1.7rem, 2.5vw, 2.1rem);\n      line-height: 1;\n      letter-spacing: -.04em;\n      font-weight: 400;\n    }\n\n    .panel-kicker {\n      margin-top: 8px;\n      font-family: var(--mono);\n      font-size: .68rem;\n      letter-spacing: .12em;\n      text-transform: uppercase;\n      color: var(--wts-gray);\n    }\n\n    .panel-body { padding: 22px; }\n\n    .field { margin-bottom: 20px; }\n\n    label, .label-title {\n      display: block;\n      font-weight: 900;\n      color: var(--wts-ink);\n      margin-bottom: 7px;\n    }\n\n    /* Field prompts read slightly larger than surrounding copy. Scoped to\n       direct field labels so the SBC course-list checkboxes stay compact. */\n    .field > label,\n    .label-title,\n    details.advanced.scholarship-reference summary {\n      font-size: 1.1rem;\n    }\n\n    /* First block in the panel; no divider line above it. */\n    details.advanced.scholarship-reference {\n      border-top: 0;\n      padding-top: 0;\n      margin-top: 0;\n    }\n\n    .help {\n      margin-top: 7px;\n      color: var(--wts-gray);\n      font-size: .88rem;\n    }\n\n    select, input {\n      width: 100%;\n      border: 1px solid rgba(86,87,90,.32);\n      border-radius: var(--radius-md);\n      padding: 13px;\n      font: 700 1rem var(--sans);\n      background: #fff;\n      color: var(--wts-ink);\n    }\n\n    select:focus, input:focus, button:focus {\n      outline: 3px solid color-mix(in srgb, var(--accent) 24%, transparent);\n      outline-offset: 2px;\n    }\n\n    .choice-row {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 10px;\n    }\n\n    .choice {\n      width: 100%;\n      border: 1px solid var(--border);\n      border-radius: var(--radius-md);\n      background: #fff;\n      padding: 14px;\n      cursor: pointer;\n      text-align: left;\n      min-height: 78px;\n    }\n\n    .choice[aria-pressed=\"true\"] {\n      border-color: var(--accent);\n      background: var(--accent-soft);\n    }\n\n    .choice strong {\n      display: block;\n      font-size: .98rem;\n      margin-bottom: 4px;\n    }\n\n    .choice span {\n      display: block;\n      color: var(--wts-gray);\n      font-size: .88rem;\n      line-height: 1.35;\n    }\n\n    .amount-buttons {\n      display: grid;\n      grid-template-columns: repeat(4, 1fr);\n      gap: 8px;\n      margin-top: 10px;\n    }\n\n    /* Fills the support field with the full amount the selected matching\n       scholarship will match; spans its own row under the presets. */\n    .quick-amount.max-match {\n      grid-column: 1 / -1;\n    }\n\n    .quick-amount {\n      border: 1px solid var(--border);\n      background: #fff;\n      border-radius: 4px;\n      padding: 10px 8px;\n      cursor: pointer;\n      font-family: var(--mono);\n      /* Buttons don't inherit the page font size; without this they fall\n         back to the browser's ~13px form default (noticeably small on\n         mobile). */\n      font-size: 1rem;\n      font-weight: 700;\n      color: var(--wts-ink);\n    }\n\n    .quick-amount:hover {\n      border-color: var(--accent);\n      background: var(--accent-soft);\n    }\n\n    details.advanced {\n      margin-top: 4px;\n      border-top: 1px solid rgba(86,87,90,.16);\n      padding-top: 18px;\n    }\n\n    details.advanced summary {\n      cursor: pointer;\n      font-weight: 900;\n      color: var(--accent);\n      list-style-position: outside;\n    }\n\n    .scholarship-reference {\n      margin-top: 0;\n    }\n\n    .scholarship-list {\n      margin: 12px 0 6px;\n      padding-left: 18px;\n      color: var(--wts-gray);\n      font-size: .93rem;\n      display: grid;\n      gap: 8px;\n    }\n\n    .scholarship-list strong {\n      color: var(--wts-ink);\n    }\n\n    /* Selectable scholarships (one at a time) render as radio rows. */\n    .scholarship-option {\n      list-style: none;\n      margin-left: -18px;\n    }\n\n    .scholarship-option label {\n      display: grid;\n      grid-template-columns: auto 1fr;\n      gap: 10px;\n      align-items: start;\n      font-weight: 400;\n      cursor: pointer;\n      margin-bottom: 0;\n    }\n\n    .scholarship-option input[type=\"radio\"] {\n      margin-top: 3px;\n      accent-color: var(--accent);\n    }\n\n    /* Non-selectable entries: clearly informational, not broken options. */\n    .scholarship-note-head {\n      list-style: none;\n      margin: 10px 0 2px -18px;\n      font-family: var(--sans);\n      font-size: .7rem;\n      font-weight: 700;\n      letter-spacing: .14em;\n      text-transform: uppercase;\n      color: var(--wts-gray);\n    }\n\n    .scholarship-list li.scholarship-note {\n      font-style: italic;\n    }\n\n    .result-card {\n      position: relative;\n      /* Same radius as the white panels; a larger one reads as a\n         mismatch against the light background. */\n      border-radius: var(--radius-lg);\n      padding: clamp(24px, 4vw, 38px);\n      color: #fff;\n      /* Always the neutral gray, regardless of program theme, so the\n         color-coded bucket tiles inside stay the focus. */\n      background: linear-gradient(160deg, #3f4042, #56575a);\n      box-shadow: var(--shadow);\n      overflow: hidden;\n      margin-bottom: 20px;\n    }\n\n    .result-card::after {\n      content: \"W\";\n      position: absolute;\n      right: -36px;\n      bottom: -86px;\n      font-family: var(--serif);\n      font-size: 16rem;\n      line-height: 1;\n      color: rgba(255,255,255,.06);\n    }\n\n    .result-card > * { position: relative; z-index: 1; }\n\n    .result-label {\n      font-family: var(--mono);\n      text-transform: uppercase;\n      letter-spacing: .14em;\n      color: rgba(255,255,255,.8);\n      font-size: .72rem;\n    }\n\n    .result-value {\n      margin: 0 0 10px;\n      font-family: var(--serif);\n      font-size: clamp(3.1rem, 6vw, 5.2rem);\n      letter-spacing: -.055em;\n      line-height: .9;\n      white-space: nowrap;\n    }\n\n    .result-caption {\n      max-width: none;\n      color: rgba(255,255,255,.84);\n      font-size: 1.05rem;\n    }\n\n    .result-mini-grid {\n      display: grid;\n      grid-template-columns: repeat(4, 1fr);\n      gap: 12px;\n      /* No extra space above the tiles; the card padding frames them\n         evenly all the way around. */\n      margin-top: 0;\n    }\n\n    .mini {\n      border: 1px solid rgba(255,255,255,.18);\n      border-radius: 5px;\n      background: rgba(255,255,255,.1);\n      padding: 14px;\n      min-width: 0;\n      /* values anchor to the bottom so the figures align across tiles */\n      display: flex;\n      flex-direction: column;\n    }\n\n    .mini .mini-value {\n      margin-top: auto;\n    }\n\n    /* Tile accents mirror the pie chart's bucket colors, all with the same\n       gradient treatment; the gold estimated-cost tile keeps the highlight\n       ring so it stands out as the answer. */\n    .mini.bucket-match {\n      border-color: #b3455a;\n      background: linear-gradient(135deg, rgba(140,34,51,.42), rgba(255,255,255,.10));\n    }\n\n    .mini.bucket-raised {\n      border-color: #3f8a96;\n      background: linear-gradient(135deg, rgba(2,67,77,.55), rgba(255,255,255,.10));\n    }\n\n    .mini.bucket-student {\n      border-color: var(--wts-gold);\n      background: linear-gradient(135deg, rgba(189,139,65,.34), rgba(255,255,255,.10));\n      box-shadow: 0 0 0 3px rgba(189,139,65,.22);\n    }\n\n    .match-footnote {\n      margin: 16px 0 0;\n      font-style: italic;\n      font-size: .85rem;\n      line-height: 1.5;\n      color: rgba(255,255,255,.75);\n    }\n\n    .mini .mini-label {\n      font-family: var(--mono);\n      text-transform: uppercase;\n      letter-spacing: .1em;\n      color: rgba(255,255,255,.72);\n      font-size: .64rem;\n      margin-bottom: 8px;\n    }\n\n    .mini .mini-value {\n      font-family: var(--mono);\n      font-weight: 700;\n      font-size: clamp(1rem, 1.6vw, 1.25rem);\n      white-space: nowrap;\n    }\n\n\n    .horizontal-summary {\n      margin-top: 20px;\n    }\n\n    .summary-strip {\n      display: grid;\n      grid-template-columns: repeat(5, minmax(0, 1fr));\n      gap: 0;\n      background: #fff;\n    }\n\n    .summary-tile {\n      min-width: 0;\n      padding: 16px 18px;\n      border-right: 1px solid rgba(86,87,90,.14);\n    }\n\n    .summary-tile:last-child {\n      border-right: 0;\n    }\n\n    .summary-tile .tile-label {\n      display: block;\n      font-family: var(--mono);\n      font-size: .66rem;\n      letter-spacing: .09em;\n      text-transform: uppercase;\n      color: var(--wts-gray);\n      margin-bottom: 8px;\n      line-height: 1.25;\n    }\n\n    .summary-tile .tile-value {\n      display: block;\n      font-family: var(--mono);\n      font-weight: 700;\n      font-size: clamp(.95rem, 1.35vw, 1.18rem);\n      color: var(--wts-ink);\n      white-space: nowrap;\n    }\n\n    .summary-tile.total {\n      background: var(--accent-soft);\n    }\n\n    .summary-tile.total .tile-label {\n      color: var(--accent-dark);\n    }\n\n    .summary-tile.total .tile-value {\n      color: var(--accent);\n      font-size: clamp(1.05rem, 1.55vw, 1.35rem);\n    }\n\n    .summary-tile.match-opportunity {\n      background: rgba(189,139,65,.16);\n      box-shadow: inset 0 0 0 1px rgba(189,139,65,.38);\n    }\n\n    .summary-tile.match-opportunity .tile-label::after {\n      content: \" \u2022 still eligible\";\n      color: var(--wts-gray);\n      font-weight: 700;\n      letter-spacing: 0;\n      text-transform: none;\n    }\n\n    .horizontal-summary .notice {\n      margin: 0;\n      border-top-left-radius: 0;\n      border-top-right-radius: 0;\n      border-left: 0;\n      border-right: 0;\n      border-bottom: 0;\n    }\n\n    .summary-tile[hidden] {\n      display: none !important;\n    }\n\n\n    .table-block {\n      background: #fff;\n      border: 1px solid var(--border);\n      border-radius: var(--radius-lg);\n      box-shadow: var(--shadow);\n      overflow: hidden;\n    }\n\n    .table-header {\n      display: flex;\n      justify-content: space-between;\n      gap: 14px;\n      align-items: baseline;\n      padding: 18px 20px;\n      border-bottom: 1px solid var(--border);\n      background: linear-gradient(90deg, rgba(86,87,90,.05), rgba(189,139,65,.08));\n    }\n\n    .table-header h2 {\n      margin: 0;\n      font-family: var(--serif);\n      font-weight: 400;\n      font-size: clamp(1.65rem, 2.5vw, 2rem);\n      line-height: 1;\n      letter-spacing: -.04em;\n    }\n\n    .table-header span {\n      font-family: var(--mono);\n      font-size: .72rem;\n      color: var(--wts-gray);\n      text-transform: uppercase;\n      letter-spacing: .14em;\n      text-align: right;\n    }\n\n    .summary-list { display: grid; }\n\n    .summary-row {\n      display: grid;\n      grid-template-columns: minmax(0, 1fr) auto;\n      gap: 18px;\n      padding: 14px 0;\n      border-bottom: 1px solid rgba(86,87,90,.14);\n    }\n\n    .summary-row:last-child { border-bottom: 0; }\n    .summary-row span:first-child { min-width: 0; overflow-wrap: anywhere; }\n\n    .amount {\n      font-family: var(--mono);\n      font-weight: 700;\n      white-space: nowrap;\n      text-align: right;\n    }\n\n    .summary-row.total {\n      font-size: 1.14rem;\n      font-weight: 900;\n    }\n\n    .summary-row.total .amount { color: var(--accent); }\n\n    /* Cost & Scholarship Mix \u2014 an inset panel inside the results card, so the\n       estimate and the mix read as one container. */\n    .mix-panel {\n      margin-top: 22px;\n      background: rgba(255,255,255,.96);\n      border-radius: 5px;\n      padding: 20px 24px;\n      color: var(--wts-ink);\n    }\n\n    /* Program identity repeated inside the white summary panel, echoing the\n       step 1 card format at a smaller size. */\n    .mix-program {\n      display: flex;\n      align-items: center;\n      gap: 8px;\n      margin-bottom: 6px;\n    }\n\n    .mix-program-name {\n      font-family: var(--serif);\n      font-weight: 300;\n      font-size: 1.4rem;\n      line-height: 1;\n    }\n\n    .mix-program .online-badge {\n      transform: translateY(-1px);\n    }\n\n    .mix-title {\n      font-family: var(--mono);\n      text-transform: uppercase;\n      letter-spacing: .14em;\n      color: var(--wts-gray);\n      font-size: .72rem;\n      margin-bottom: 16px;\n    }\n\n    .mix-content {\n      display: grid;\n      grid-template-columns: auto minmax(0, 1fr);\n      gap: clamp(20px, 4vw, 44px);\n      align-items: center;\n      justify-content: center;\n    }\n\n    .pie-wrap {\n      position: relative;\n      display: grid;\n      place-items: center;\n      width: 180px;\n      max-width: 100%;\n      margin: 0 auto;\n    }\n\n    .pie-svg {\n      width: 180px;\n      height: 180px;\n      overflow: visible;\n      filter: drop-shadow(0 12px 28px rgba(31,32,35,.09));\n    }\n\n    .pie-slice { stroke: #fff; stroke-width: 2; }\n    .pie-slice.student { fill: var(--chart-student); }\n    .pie-slice.raised { fill: var(--chart-raised); }\n    .pie-slice.match { fill: var(--chart-match); }\n\n    .pie-label {\n      font-family: var(--mono);\n      font-size: 11px;\n      font-weight: 700;\n      letter-spacing: .04em;\n      fill: #fff;\n      text-anchor: middle;\n      dominant-baseline: central;\n      paint-order: stroke;\n      stroke: rgba(31,32,35,.25);\n      stroke-width: 2.5px;\n      stroke-linejoin: round;\n    }\n\n    .pie-label.hidden { display: none; }\n\n    .legend {\n      display: grid;\n      gap: 10px;\n      margin-top: 6px;\n    }\n\n    .legend-item {\n      display: grid;\n      grid-template-columns: 12px minmax(0, 1fr) auto;\n      gap: 10px;\n      align-items: start;\n      font-size: .9rem;\n      color: var(--wts-gray);\n    }\n\n    .dot {\n      width: 12px;\n      height: 12px;\n      border-radius: 50%;\n      margin-top: 5px;\n    }\n\n    .dot.student { background: var(--chart-student); }\n    .dot.raised { background: var(--chart-raised); }\n    .dot.match { background: var(--chart-match); }\n\n    .legend strong {\n      color: var(--wts-ink);\n      font-weight: 900;\n    }\n\n    .legend .amount {\n      font-size: .88rem;\n    }\n\n    .notice {\n      margin-top: 20px;\n      border-radius: 5px;\n      border: 1px solid rgba(189,139,65,.36);\n      background: rgba(189,139,65,.11);\n      padding: 16px 18px;\n      color: #3b3429;\n      font-size: .94rem;\n    }\n\n    .term-block {\n      margin-top: 20px;\n    }\n\n    .table-scroll { overflow-x: auto; }\n\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      min-width: 820px;\n    }\n\n    th {\n      text-align: left;\n      padding: 12px 14px;\n      font-family: var(--mono);\n      font-size: .7rem;\n      letter-spacing: .08em;\n      text-transform: uppercase;\n      color: var(--wts-gray);\n      background: #fff;\n      border-bottom: 1px solid var(--border);\n      vertical-align: bottom;\n      white-space: normal;\n    }\n\n    td {\n      padding: 13px 14px;\n      border-bottom: 1px solid rgba(86,87,90,.12);\n      vertical-align: top;\n      overflow-wrap: anywhere;\n    }\n\n    tr:last-child td { border-bottom: 0; }\n\n    td.money, th.money {\n      text-align: right;\n      white-space: nowrap;\n      font-family: var(--mono);\n    }\n\n    .action-row {\n      display: grid;\n      grid-template-columns: repeat(3, minmax(0, 1fr));\n      gap: 10px;\n      margin-top: 20px;\n    }\n\n    .btn {\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      min-height: 48px;\n      border-radius: 4px;\n      border: 1px solid transparent;\n      padding: 12px 16px;\n      font-family: inherit;\n      font-size: inherit;\n      line-height: 1.2;\n      font-weight: 900;\n      text-decoration: none;\n      cursor: pointer;\n      transition: transform .15s ease, background .15s ease;\n      text-align: center;\n      color: var(--wts-ink);\n      appearance: none;\n      -webkit-appearance: none;\n    }\n\n    .btn:hover { transform: translateY(-1px); }\n    .btn.primary { background: var(--accent); color: white; }\n    .btn.primary:hover { background: var(--accent-dark); }\n\n    .btn.secondary {\n      background: white;\n      border-color: var(--border);\n    }\n\n    .fine-print {\n      margin: 14px 0 0;\n      color: var(--wts-gray);\n      font-size: .85rem;\n    }\n\n\n    .mac-only[hidden] {\n      display: none !important;\n    }\n\n    .sub-panel {\n      border: 1px solid var(--border);\n      border-radius: var(--radius-md);\n      background: rgba(255,255,255,.72);\n      padding: 16px;\n      margin-top: 14px;\n    }\n\n    .sub-panel-title {\n      margin: 0 0 8px;\n      font-weight: 900;\n      color: var(--wts-ink);\n    }\n\n    .range-row {\n      display: grid;\n      grid-template-columns: minmax(0, 1fr) auto;\n      gap: 12px;\n      align-items: center;\n      margin-top: 10px;\n    }\n\n    input[type=\"range\"] {\n      padding: 0;\n      accent-color: var(--accent);\n    }\n\n    .range-value {\n      min-width: 76px;\n      border: 1px solid var(--border);\n      border-radius: 4px;\n      background: #fff;\n      padding: 8px 10px;\n      font-family: var(--mono);\n      font-weight: 700;\n      text-align: center;\n      white-space: nowrap;\n    }\n\n    .recognition-note {\n      margin-top: 10px;\n      color: var(--wts-gray);\n      font-size: .88rem;\n      line-height: 1.35;\n    }\n\n    .tooltip-label {\n      display: flex;\n      align-items: center;\n      justify-content: space-between;\n      gap: 8px;\n      flex-wrap: nowrap;\n      width: 100%;\n    }\n\n    .info-tooltip {\n      position: relative;\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      flex: 0 0 auto;\n      width: 20px;\n      height: 20px;\n      border-radius: 50%;\n      border: 1px solid rgba(86,87,90,.32);\n      background: #fff;\n      color: var(--accent);\n      font-size: .78rem;\n      font-weight: 900;\n      cursor: help;\n      line-height: 1;\n    }\n\n    .tooltip-box {\n      position: absolute;\n      right: 0;\n      left: auto;\n      bottom: calc(100% + 10px);\n      transform: translateY(4px);\n      z-index: 10;\n      width: min(300px, calc(100vw - 56px));\n      max-width: 300px;\n      padding: 12px 14px;\n      border-radius: 4px;\n      border: 1px solid rgba(86,87,90,.18);\n      background: #fff;\n      color: var(--wts-ink);\n      box-shadow: 0 12px 34px rgba(31,32,35,.16);\n      font-size: .84rem;\n      font-weight: 700;\n      line-height: 1.35;\n      opacity: 0;\n      visibility: hidden;\n      pointer-events: none;\n      transition: opacity .14s ease, transform .14s ease, visibility .14s ease;\n    }\n\n    .tooltip-box::after {\n      content: \"\";\n      position: absolute;\n      right: 3px;\n      left: auto;\n      top: 100%;\n      transform: none;\n      border: 7px solid transparent;\n      border-top-color: #fff;\n    }\n\n    .info-tooltip:hover .tooltip-box,\n    .info-tooltip:focus .tooltip-box,\n    .info-tooltip:focus-within .tooltip-box {\n      opacity: 1;\n      visibility: visible;\n      transform: translateY(0);\n    }\n\n    @media (max-width: 700px) {\n      .tooltip-label {\n        align-items: flex-start;\n      }\n\n      .tooltip-box {\n        right: -4px;\n        width: min(280px, calc(100vw - 44px));\n      }\n    }\n\n    .mac-only-row {\n      transition: opacity .18s ease;\n    }\n\n    .mac-only-row[hidden] {\n      display: none !important;\n    }\n\n\n    .course-select {\n      display: grid;\n      gap: 8px;\n      max-height: 360px;\n      overflow-y: auto;\n      padding-right: 4px;\n    }\n\n    .course-option {\n      display: grid;\n      grid-template-columns: auto minmax(0, 1fr) auto;\n      gap: 10px;\n      align-items: start;\n      border: 1px solid var(--border);\n      border-radius: 4px;\n      background: #fff;\n      padding: 11px 12px;\n      margin: 0;\n      cursor: pointer;\n    }\n\n    .course-option:has(input:checked) {\n      border-color: var(--accent);\n      background: var(--accent-soft);\n    }\n\n    .course-option input {\n      width: auto;\n      margin-top: 3px;\n      accent-color: var(--accent);\n    }\n\n    .course-option span {\n      min-width: 0;\n      line-height: 1.25;\n    }\n\n    .course-option strong {\n      font-family: var(--mono);\n      font-size: .82rem;\n      margin-right: 4px;\n    }\n\n    .course-option em {\n      font-style: normal;\n      font-family: var(--mono);\n      font-size: .75rem;\n      color: var(--wts-gray);\n      white-space: nowrap;\n      margin-top: 2px;\n    }\n\n    .course-option.disabled {\n      opacity: .48;\n      cursor: not-allowed;\n    }\n\n\n    .mini.match-opportunity {\n      border-color: var(--wts-gold);\n      background: linear-gradient(135deg, rgba(189,139,65,.24), rgba(255,255,255,.10));\n      box-shadow: 0 0 0 3px rgba(189,139,65,.18);\n    }\n\n    .summary-row.match-opportunity {\n      margin: 6px -8px;\n      padding: 14px 8px;\n      border-radius: 4px;\n      border-bottom: 0;\n      background: rgba(189,139,65,.16);\n      box-shadow: inset 0 0 0 1px rgba(189,139,65,.38);\n    }\n\n    .summary-row.match-opportunity span:first-child::after {\n      content: \" \u2014 still eligible\";\n      color: var(--wts-gray);\n      font-weight: 700;\n    }\n\n    @media (max-width: 1020px) {\n      .hero, .builder-grid { grid-template-columns: 1fr; }\n      .program-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n      .result-mini-grid { grid-template-columns: 1fr; }\n    }\n\n    @media (max-width: 700px) {\n      .program-switch, .choice-row, .amount-buttons, .action-row { grid-template-columns: 1fr; }\n      .bucket-tabs { grid-template-columns: 1fr; }\n      .bucket-tab { border-right: 0; border-bottom: 1px solid var(--border); }\n      .bucket-tab:last-child { border-bottom: 0; }\n      .mix-content { grid-template-columns: 1fr; justify-items: stretch; }\n      .hero { min-height: auto; }\n      .result-value { white-space: normal; font-size: clamp(2.8rem, 14vw, 4.2rem); }\n      .summary-row { grid-template-columns: 1fr; gap: 4px; }\n      .amount { text-align: left; }\n      .table-header { display: block; }\n      .table-header span { display: block; text-align: left; margin-top: 8px; }\n      .legend-item { grid-template-columns: 12px minmax(0, 1fr); }\n      .legend .amount { grid-column: 2; }\n    }\n\n\n    @media (max-width: 1020px) {\n      .summary-strip {\n        grid-template-columns: repeat(2, minmax(0, 1fr));\n      }\n\n      .summary-tile {\n        border-right: 0;\n        border-bottom: 1px solid rgba(86,87,90,.14);\n      }\n\n      .summary-tile:last-child {\n        border-bottom: 0;\n      }\n    }\n\n    @media (max-width: 700px) {\n      .summary-strip {\n        grid-template-columns: 1fr;\n      }\n    }\n\n\n    .lower-estimate-grid {\n      display: grid;\n      grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);\n      gap: 20px;\n      align-items: start;\n      margin-top: 20px;\n    }\n\n    .lower-estimate-grid .horizontal-summary {\n      margin-top: 0;\n    }\n\n    .left-estimate-column .summary-strip {\n      grid-template-columns: 1fr;\n    }\n\n    .left-estimate-column .summary-tile {\n      border-right: 0;\n      border-bottom: 1px solid rgba(86,87,90,.14);\n      padding: 14px 18px;\n    }\n\n    .left-estimate-column .summary-tile:last-child {\n      border-bottom: 0;\n    }\n\n    .left-estimate-column .summary-tile .tile-value {\n      font-size: 1rem;\n    }\n\n    .left-estimate-column .summary-tile.total .tile-value {\n      font-size: 1.15rem;\n    }\n\n    .right-term-column .term-block {\n      margin-top: 0;\n    }\n\n\n    @media (max-width: 1020px) {\n      .lower-estimate-grid {\n        grid-template-columns: 1fr;\n      }\n    }\n\n\n    /* Block layout so the step label and heading carry the same margins as\n       the program column, keeping the two headings level. */\n    .left-column {\n      display: block;\n      min-width: 0;\n    }\n\n    .left-column .horizontal-summary {\n      margin-top: 0;\n      width: 100%;\n    }\n\n    .left-column .summary-strip {\n      grid-template-columns: 1fr;\n    }\n\n    .left-column .summary-tile {\n      border-right: 0;\n      border-bottom: 1px solid rgba(86,87,90,.14);\n      padding: 14px 18px;\n    }\n\n    .left-column .summary-tile:last-child {\n      border-bottom: 0;\n    }\n\n    .left-column .summary-tile .tile-value {\n      font-size: 1rem;\n    }\n\n    .left-column .summary-tile.total .tile-value {\n      font-size: 1.15rem;\n    }\n\n    .results-section .term-block {\n      margin-top: 20px;\n    }\n\n\n    .lower-estimate-grid {\n      display: contents;\n    }\n\n\n    .full-width-term-section {\n      margin-top: 24px;\n      width: 100%;\n    }\n\n    .full-width-term-section .term-block {\n      width: 100%;\n      margin-top: 0;\n    }\n\n    .full-width-term-section .action-row {\n      max-width: 860px;\n      margin-left: auto;\n      margin-right: auto;\n    }\n\n\n    .full-width-summary-section {\n      margin-top: 24px;\n      width: 100%;\n    }\n\n    .full-width-summary-section .horizontal-summary {\n      width: 100%;\n      margin-top: 0;\n    }\n\n    .full-width-summary-section .summary-strip {\n      grid-template-columns: repeat(5, minmax(0, 1fr));\n    }\n\n    .full-width-summary-section .summary-tile {\n      border-right: 1px solid rgba(86,87,90,.14);\n      border-bottom: 0;\n      padding: 16px 18px;\n    }\n\n    .full-width-summary-section .summary-tile:last-child {\n      border-right: 0;\n    }\n\n    .full-width-summary-section .summary-tile[hidden] {\n      display: none !important;\n    }\n\n    .full-width-summary-section .notice {\n      margin-top: 0;\n      border-top-left-radius: 0;\n      border-top-right-radius: 0;\n      border-left: 0;\n      border-right: 0;\n      border-bottom: 0;\n    }\n\n    @media (max-width: 1020px) {\n      .full-width-summary-section .summary-strip {\n        grid-template-columns: repeat(2, minmax(0, 1fr));\n      }\n\n      .full-width-summary-section .summary-tile {\n        border-right: 0;\n        border-bottom: 1px solid rgba(86,87,90,.14);\n      }\n    }\n\n    @media (max-width: 700px) {\n      .full-width-summary-section .summary-strip {\n        grid-template-columns: 1fr;\n      }\n    }\n\n\n    /* Program category tabs, echoing the live page's tab strip. */\n    .bucket-tabs {\n      display: grid;\n      grid-template-columns: repeat(3, minmax(0, 1fr));\n      border: 1px solid var(--border);\n      border-radius: 4px;\n      overflow: hidden;\n      background: #fff;\n      margin-bottom: 16px;\n    }\n\n    .bucket-tab {\n      padding: 12px 6px;\n      border: 0;\n      border-right: 1px solid var(--border);\n      background: #fff;\n      font-family: var(--sans);\n      font-size: .72rem;\n      font-weight: 700;\n      letter-spacing: .08em;\n      text-transform: uppercase;\n      color: var(--wts-ink);\n      cursor: pointer;\n    }\n\n    .bucket-tab:last-child {\n      border-right: 0;\n    }\n\n    .bucket-tab[aria-pressed=\"true\"] {\n      background: var(--wts-gold);\n      color: #fff;\n    }\n\n    /* Three columns of compact cards across the full-width step 1 section;\n       two at tablet width, one on phones. These live after the generic\n       responsive rules, so they need their own breakpoints. */\n    .program-switch {\n      grid-template-columns: repeat(3, minmax(0, 1fr));\n    }\n\n    @media (max-width: 1020px) {\n      .program-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n    }\n\n    @media (max-width: 700px) {\n      .program-switch { grid-template-columns: 1fr; }\n    }\n\n    .results-update-note {\n      margin: -4px 0 18px;\n    }\n\n    /* Funded on-campus programs hide the inputs panel, so there is\n       nothing above the results to change. */\n    .funded-mode .results-update-note {\n      display: none;\n    }\n\n    /* The upcoming-rate-increase note reads as an annotation, like the\n       other italicized notes in step 2. */\n    #rateIncreaseNote {\n      font-style: italic;\n    }\n\n    .program-card {\n      padding: 16px 18px;\n      border-radius: 5px;\n    }\n\n\n    .market-comparison-section {\n      margin-top: 24px;\n      width: 100%;\n    }\n\n    .market-block {\n      width: 100%;\n    }\n\n    .table-subtitle {\n      margin: 6px 0 0;\n      color: var(--wts-gray);\n      font-size: .95rem;\n      line-height: 1.35;\n      font-family: var(--sans);\n      font-weight: 600;\n      letter-spacing: 0;\n      text-transform: none;\n    }\n\n    .comparison-callout {\n      padding: 14px 18px;\n      border-bottom: 1px solid var(--border);\n      background: var(--accent-soft);\n      color: var(--wts-ink);\n      font-weight: 800;\n      line-height: 1.4;\n    }\n\n    .comparison-note {\n      margin: 0;\n      padding: 14px 18px 18px;\n      color: var(--wts-gray);\n      font-size: .86rem;\n      line-height: 1.45;\n      border-top: 1px solid var(--border);\n      background: #fff;\n    }\n\n    .comparison-row-current {\n      background: var(--accent-soft);\n    }\n\n    .comparison-row-current td:first-child {\n      font-weight: 900;\n      color: var(--accent);\n    }\n\n    .comparison-program-note {\n      color: var(--wts-gray);\n      font-size: .86rem;\n      line-height: 1.35;\n      margin-top: 4px;\n    }\n\n    .comparison-source-link {\n      color: var(--accent);\n      text-decoration: none;\n      font-weight: 800;\n      white-space: nowrap;\n    }\n\n    .comparison-source-link:hover {\n      text-decoration: underline;\n    }\n\n\n    /* Bucket colors from the style guide: gold is reserved for the final\n       estimated-cost bucket, Westminster red marks seminary-provided\n       support, and the forest teal marks outside support. */\n    .pie-slice.student { fill: #bd8b41 !important; }\n    .pie-slice.raised { fill: #02434d !important; }\n    .pie-slice.match { fill: #8c2233 !important; }\n\n    .dot.student { background: #bd8b41 !important; }\n    .dot.raised { background: #02434d !important; }\n    .dot.match { background: #8c2233 !important; }\n\n\n     \n    /* Headings use the site's Kepler serif, matching wts.edu display type. */\n    .section-heading,\n    .panel-title,\n    .table-header h2 {\n      font-family: var(--serif);\n      font-weight: 300;\n      letter-spacing: normal;\n    }\n\n    .section-heading { font-size: 2.1rem; margin-bottom: 14px; }\n    .panel-title, .table-header h2 { font-size: 1.45rem; }\n\n    .program-card .name {\n      font-family: var(--serif);\n      font-size: 1.16rem;\n      font-weight: 400;\n      line-height: 1.35;\n      letter-spacing: normal;\n      margin-bottom: 4px;\n    }\n\n    .program-card .code {\n      font-family: var(--sans);\n      font-size: .84rem;\n      font-weight: 700;\n      letter-spacing: 0;\n      text-transform: none;\n      color: var(--wts-gray);\n      margin-top: 8px;\n    }\n\n    .program-card .desc,\n    .help,\n    .fine-print,\n    .result-caption,\n    .comparison-program-note,\n    .comparison-note,\n    .hero-copy {\n      font-family: var(--sans);\n      line-height: 1.45;\n    }\n\n    .hero-card .small,\n    .mini-label,\n    .tile-label,\n    .table-header span {\n      letter-spacing: .04em;\n    }\n\n    .panel-body { padding-top: 20px; }\n    .field + .field { margin-top: 22px; }\n\n\n    .hero-info-stack {\n      display: grid;\n      gap: 10px;\n      align-content: start;\n    }\n\n    .scholarship-availability-note {\n      padding: 12px 14px;\n      border: 1px solid rgba(86,87,90,.22);\n      border-radius: 4px;\n      background: #f7f7f7;\n      color: var(--wts-gray);\n      font-size: .86rem;\n      line-height: 1.45;\n    }\n\n    .scholarship-availability-note strong {\n      color: var(--wts-ink);\n    }\n\n\n    .print-only { display: none; }\n\n    @media print {\n      @page {\n        size: Letter portrait;\n        margin: 1in;\n      }\n\n      * {\n        -webkit-print-color-adjust: exact !important;\n        print-color-adjust: exact !important;\n      }\n\n      .wts-estimator-app {\n        background: #fff !important;\n        color: #252629;\n        font-size: 9.5pt;\n        line-height: 1.35;\n      }\n\n      .wts-estimator-app { margin: 0; }\n\n      .wrap {\n        max-width: none;\n        padding: 0;\n      }\n\n      .brand-frame {\n        border: 0;\n        padding: 0;\n      }\n\n      .brand-frame::before { display: none !important; }\n\n      .hero,\n      .program-section,\n      .left-column,\n      .action-row,\n      .mini.mac-only-row,\n      .market-block .comparison-source-link,\n      .market-block .comparison-note,\n      .market-block th:nth-child(5),\n      .market-block td:nth-child(5),\n      .market-block th:nth-child(7),\n      .market-block td:nth-child(7) {\n        display: none !important;\n      }\n\n      .print-only { display: block !important; }\n\n      .print-header {\n        margin: 0 0 14pt;\n        padding: 0 0 11pt;\n        border-bottom: 2pt solid #8c2233;\n        break-after: avoid;\n      }\n\n      .print-brand-line {\n        display: flex;\n        justify-content: space-between;\n        gap: 12pt;\n        margin-bottom: 5pt;\n        color: #56575a;\n        font-family: var(--sans);\n        font-size: 7.5pt;\n        font-weight: 800;\n        letter-spacing: .08em;\n        text-transform: uppercase;\n      }\n\n      .print-header h1 {\n        margin: 0;\n        font-family: var(--serif);\n        font-size: 21pt;\n        line-height: 1.08;\n        color: #252629;\n      }\n\n      .print-intro {\n        margin: 4pt 0 9pt;\n        color: #56575a;\n        font-size: 9pt;\n      }\n\n      .print-meta-grid {\n        display: grid;\n        grid-template-columns: repeat(3, minmax(0, 1fr));\n        border: .7pt solid #d7d7d8;\n        border-radius: 7pt;\n        overflow: hidden;\n      }\n\n      .print-meta-grid > div {\n        min-width: 0;\n        padding: 7pt 8pt;\n        border-right: .7pt solid #d7d7d8;\n        border-bottom: .7pt solid #d7d7d8;\n        background: #f6f6f6;\n      }\n\n      .print-meta-grid > div:nth-child(3n) { border-right: 0; }\n      .print-meta-grid > div:nth-last-child(-n+3) { border-bottom: 0; }\n\n      .print-meta-grid span {\n        display: block;\n        margin-bottom: 2pt;\n        color: #56575a;\n        font-size: 6.8pt;\n        font-weight: 800;\n        letter-spacing: .06em;\n        text-transform: uppercase;\n      }\n\n      .print-meta-grid strong {\n        display: block;\n        overflow-wrap: anywhere;\n        font-size: 8.6pt;\n        line-height: 1.2;\n      }\n\n      .builder-grid {\n        display: block !important;\n        margin: 0;\n      }\n\n      .results-section {\n        display: grid !important;\n        grid-template-columns: minmax(0, 1.14fr) minmax(190pt, .86fr);\n        gap: 10pt;\n        align-items: stretch;\n        margin: 0 0 10pt;\n      }\n\n      .result-card,\n      .table-block,\n      .pie-card {\n        box-shadow: none !important;\n        break-inside: avoid;\n      }\n\n      .result-card {\n        min-height: 0;\n        padding: 14pt 15pt;\n        border-radius: 9pt;\n      }\n\n      .result-label {\n        font-size: 7.5pt;\n        letter-spacing: .06em;\n      }\n\n      .result-value {\n        margin: 3pt 0 4pt;\n        font-size: 27pt;\n        line-height: 1;\n      }\n\n      .result-caption {\n        max-width: none;\n        margin: 0 0 9pt;\n        font-size: 8.3pt;\n        line-height: 1.3;\n      }\n\n      .result-mini-grid {\n        grid-template-columns: repeat(3, minmax(0, 1fr));\n        gap: 5pt;\n      }\n\n      .mini {\n        padding: 7pt;\n        border-radius: 6pt;\n      }\n\n      .mini-label {\n        font-size: 6.4pt;\n        line-height: 1.15;\n      }\n\n      .mini-value { font-size: 10pt; }\n\n      .summary-chart-grid {\n        display: block !important;\n        margin: 0;\n      }\n\n      .pie-card {\n        height: 100%;\n        display: grid !important;\n        grid-template-columns: 105pt minmax(0, 1fr) !important;\n        grid-template-areas:\n          \"title title\"\n          \"chart legend\" !important;\n        gap: 4pt 9pt !important;\n        padding: 12pt;\n        border-radius: 9pt;\n      }\n\n      .pie-title {\n        margin: 0;\n        font-size: 10pt;\n      }\n\n      .pie-wrap {\n        width: 100pt;\n        height: 100pt;\n        margin: 0 !important;\n      }\n\n      .pie-svg { width: 100pt; height: 100pt; }\n\n      .pie-label { font-size: 12px; }\n\n      .legend {\n        margin: 0 !important;\n        gap: 5pt;\n      }\n\n      .legend-item {\n        grid-template-columns: 7pt minmax(0, 1fr) auto;\n        gap: 5pt;\n        padding: 4pt 0;\n        font-size: 7.7pt;\n      }\n\n      .print-explainer {\n        margin: 0 0 10pt;\n        padding: 9pt 11pt;\n        border: .8pt solid #d7d7d8;\n        border-left: 3pt solid #bd8b41;\n        border-radius: 7pt;\n        background: #faf8f3;\n        break-inside: avoid;\n      }\n\n      .print-explainer h2 {\n        margin: 0 0 5pt;\n        font-family: var(--sans);\n        font-size: 9.5pt;\n      }\n\n      .print-explainer-grid {\n        display: grid;\n        grid-template-columns: repeat(3, minmax(0, 1fr));\n        gap: 8pt;\n      }\n\n      .print-explainer p {\n        margin: 0;\n        font-size: 7.8pt;\n        line-height: 1.32;\n      }\n\n      .print-scholarship-note {\n        margin-top: 6pt !important;\n        padding-top: 5pt;\n        border-top: .7pt solid #ddd2bf;\n        color: #56575a;\n      }\n\n      .full-width-summary-section {\n        margin: 0;\n        break-inside: avoid;\n      }\n\n      .horizontal-summary {\n        margin: 0;\n        border: .8pt solid #d7d7d8;\n        border-radius: 8pt;\n        overflow: hidden;\n      }\n\n      .horizontal-summary .table-header {\n        padding: 7pt 10pt;\n      }\n\n      .horizontal-summary .table-header h2 { font-size: 10pt; }\n      .horizontal-summary .table-header span { font-size: 7pt; }\n\n      .summary-strip {\n        display: grid !important;\n        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;\n      }\n\n      .summary-tile {\n        padding: 8pt 7pt !important;\n        border-right: .7pt solid #d7d7d8 !important;\n        border-bottom: 0 !important;\n      }\n\n      .summary-tile:last-child { border-right: 0 !important; }\n\n      .summary-tile .tile-label {\n        min-height: 17pt;\n        margin-bottom: 3pt;\n        font-size: 6.2pt;\n        line-height: 1.15;\n      }\n\n      .summary-tile .tile-value,\n      .summary-tile.total .tile-value {\n        font-size: 10.5pt !important;\n      }\n\n      .horizontal-summary .notice {\n        padding: 7pt 10pt;\n        font-size: 7.3pt;\n        line-height: 1.3;\n      }\n\n      .full-width-term-section {\n        margin-top: 0;\n        break-before: page;\n      }\n\n      .term-block,\n      .market-block {\n        border: 0;\n        border-radius: 0;\n        overflow: visible;\n      }\n\n      .term-block .table-header,\n      .market-block .table-header {\n        padding: 0 0 7pt;\n        border-bottom: 1.2pt solid #56575a;\n      }\n\n      .term-block .table-header h2,\n      .market-block .table-header h2 {\n        font-size: 14pt;\n      }\n\n      .print-table-note,\n      .table-subtitle,\n      .comparison-callout,\n      .comparison-note {\n        font-size: 7.4pt;\n        line-height: 1.3;\n      }\n\n      .print-table-note {\n        margin: 6pt 0;\n        color: #56575a;\n      }\n\n      .table-scroll { overflow: visible !important; }\n\n      table {\n        width: 100%;\n        table-layout: fixed;\n        border-collapse: collapse;\n        font-size: 7.7pt;\n      }\n\n      thead { display: table-header-group; }\n      tfoot { display: table-footer-group; }\n      tr { break-inside: avoid; page-break-inside: avoid; }\n\n      th,\n      td {\n        padding: 4.5pt 4pt;\n        overflow-wrap: anywhere;\n      }\n\n      th {\n        font-size: 6.5pt;\n        line-height: 1.15;\n        background: #f1f1f1 !important;\n      }\n\n      .term-block th:nth-child(1) { width: 18%; }\n      .term-block th:nth-child(2) { width: 9%; }\n      .term-block th:nth-child(3) { width: 17%; }\n      .term-block th:nth-child(4) { width: 17%; }\n      .term-block th:nth-child(5) { width: 15%; }\n      .term-block th:nth-child(6) { width: 24%; }\n\n      .market-comparison-section {\n        margin-top: 0;\n        break-before: page;\n      }\n\n      .market-block .table-header {\n        align-items: end;\n      }\n\n      .market-block .comparison-callout {\n        margin: 6pt 0;\n        padding: 6pt 8pt;\n        border: .7pt solid #d7d7d8;\n        background: #f7f7f7 !important;\n      }\n\n      .market-block table { font-size: 7.2pt; }\n      .market-block th,\n      .market-block td { padding: 4pt 3.5pt; }\n\n      .market-block th:nth-child(1) { width: 7%; }\n      .market-block th:nth-child(2) { width: 29%; }\n      .market-block th:nth-child(3) { width: 31%; }\n      .market-block th:nth-child(4) { width: 10%; }\n      .market-block th:nth-child(6) { width: 23%; }\n\n      .comparison-program-note { font-size: 6.4pt; }\n      .print-comparison-note {\n        margin: 7pt 0 0;\n        padding-top: 6pt;\n        border-top: .7pt solid #d7d7d8;\n        color: #56575a;\n        font-size: 7.2pt;\n        line-height: 1.3;\n      }\n\n      a { color: inherit !important; text-decoration: none !important; }\n      a[href]::after { content: none !important; }\n    }\n  \n/* --- embed-mode additions (not part of the standalone page) --- */\n:host { display: block; }\n/* The standalone page has its own hero; the embed shows the centered\n   section header instead. */\n.wts-estimator-app .calculator-header { display: block; }\n/* The embed shows only the interactive estimator: program cards, financial\n   information, estimated cost, and the cost & scholarship mix. The host page\n   supplies its own hero, and the long-form summary / per-term / market\n   comparison sections stay on the standalone page only. */\n.wts-estimator-app .hero,\n.wts-estimator-app .full-width-summary-section,\n.wts-estimator-app .full-width-term-section,\n.wts-estimator-app .market-comparison-section { display: none; }\n/* Keep the advanced pace options out of the embed; the start-term picker\n   stays because the tuition rate increases in the June 2027 term. */\n.wts-estimator-app details.advanced:not(.scholarship-reference) { display: none; }\n/* wts.edu's next section overlaps upward with an angled (skewed) top edge;\n   reserve room so it doesn't clip the last card of the estimator. */\n.wts-estimator-app .wrap { padding-bottom: 150px; }\n";
+  var HTML = "\n  <main class=\"wrap\">\n    <div class=\"brand-frame\">\n      <section class=\"print-only print-header\" aria-label=\"Printed estimate heading\">\n        <div class=\"print-brand-line\">\n          <span>Westminster Theological Seminary<\/span>\n          <span>Online Programs<\/span>\n        <\/div>\n        <h1>WTS Online Program Cost Estimate<\/h1>\n        <p class=\"print-intro\">A personalized planning estimate based on the information entered in the estimator.<\/p>\n        <div class=\"print-meta-grid\">\n          <div><span>Program<\/span><strong id=\"printProgram\">MATS<\/strong><\/div>\n          <div><span>Program credits<\/span><strong id=\"printCredits\">36<\/strong><\/div>\n          <div><span>Expected pace<\/span><strong id=\"printPace\">1 course per term<\/strong><\/div>\n          <div><span>Start term<\/span><strong id=\"printStartTerm\">June 2026<\/strong><\/div>\n          <div><span>Anticipated completion<\/span><strong id=\"printCompletionTerm\">March 2029<\/strong><\/div>\n          <div><span>Prepared<\/span><strong id=\"printDate\"><\/strong><\/div>\n        <\/div>\n      <\/section>\n      <section class=\"hero\" aria-labelledby=\"page-title\">\n        <div>\n          <div class=\"eyebrow\">Westminster Theological Seminary<\/div>\n          <h1 id=\"page-title\">WTS Online Program Cost Estimator<\/h1>\n          <p class=\"hero-copy\">\n            Estimate your full-program cost after outside support and WTS matching scholarships.\n          <\/p>\n        <\/div>\n        <div class=\"hero-info-stack\">\n          <aside class=\"hero-card\" aria-label=\"Estimator assumptions\">\n            <div class=\"small\">Key Information<\/div>\n            <div class=\"hero-stat\"><span>MATS Match<\/span><strong>$5,000 lifetime match<\/strong><\/div>\n            <div class=\"hero-stat\"><span>MAC Match<\/span><strong>25% match<\/strong><\/div>\n            <div class=\"hero-stat\"><span>MDiv / MAR Match<\/span><strong>$675 per term<\/strong><\/div>\n          <\/aside>\n          <div class=\"scholarship-availability-note\" role=\"note\">\n            <strong>Scholarships are limited.<\/strong> Students must apply, and eligibility does not guarantee that a matching scholarship will be awarded.\n          <\/div>\n        <\/div>\n      <\/section>\n\n      <header class=\"calculator-header\">\n        <div class=\"calc-eyebrow\">Tuition &amp; Scholarships<\/div>\n        <h2 class=\"calc-title\">Tuition Savings Calculator<\/h2>\n      <\/header>\n\n      <section class=\"builder-grid\">\n      <section class=\"section program-section\">\n        <div class=\"step-label\">Step 1<\/div>\n        <h2 class=\"section-heading\">Choose Your Program<\/h2>\n        <div class=\"bucket-tabs\" aria-label=\"Program category\">\n          <button type=\"button\" class=\"bucket-tab\" data-bucket=\"campus\" aria-pressed=\"false\">On-Campus Programs<\/button>\n          <button type=\"button\" class=\"bucket-tab\" data-bucket=\"online\" aria-pressed=\"true\">Online Programs<\/button>\n          <button type=\"button\" class=\"bucket-tab\" data-bucket=\"advanced\" aria-pressed=\"false\">Advanced Programs<\/button>\n        <\/div>\n        <div class=\"program-switch\" aria-label=\"Program selection\">\n          <button type=\"button\" id=\"matsBtn\" class=\"program-card\" aria-pressed=\"true\">\n            <div class=\"name\">Master of Arts in Theological Studies (MATS)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge\">Online<\/span><\/div>\n            <div class=\"code\">36 credits<\/div>\n          <\/button>\n          <button type=\"button\" id=\"macBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Master of Arts in Counseling (MAC)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge\">Online<\/span><\/div>\n            <div class=\"code\">61 credits<\/div>\n          <\/button>\n          <button type=\"button\" id=\"mdivBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Master of Divinity (MDiv), General Ministries<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge\">Online<\/span> <span class=\"online-badge campus alt-modality\" data-jump=\"MDivCampus\" title=\"See the on-campus MDiv\">On Campus<\/span><\/div>\n            <div class=\"code\">111 credits<\/div>\n          <\/button>\n          <button type=\"button\" id=\"marBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Master of Arts in Religion (MAR)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge\">Online<\/span> <span class=\"online-badge campus alt-modality\" data-jump=\"MARCampus\" title=\"See the on-campus MAR\">On Campus<\/span><\/div>\n            <div class=\"code\">74 credits<\/div>\n          <\/button>\n          <button type=\"button\" id=\"certTSCBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Theological Studies Certificate (TSC)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge\">Online<\/span><\/div>\n            <div class=\"desc\">Tracks available: Theology and History, Foundations of Theology, Biblical Interpretation<\/div>\n            <div class=\"code\">9 credits<\/div>\n          <\/button>\n          <button type=\"button\" id=\"certBLCBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Biblical Languages Certificate (BLC)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge\">Online<\/span><\/div>\n            <div class=\"desc\">Tracks available: Greek, Hebrew<\/div>\n            <div class=\"code\">9 credits<\/div>\n          <\/button>\n          <button type=\"button\" id=\"mdivCampusBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Master of Divinity (MDiv), General Ministries<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge campus\">On Campus<\/span> <span class=\"online-badge alt-modality\" data-jump=\"MDiv\" title=\"See the online MDiv\">Online<\/span><\/div>\n            <div class=\"code\">111 credits<\/div>\n            <div class=\"funded-note\">Tuition 100% funded<\/div>\n          <\/button>\n          <button type=\"button\" id=\"mdivFellowsBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Master of Divinity (MDiv), Pastoral Fellows<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge campus\">On Campus<\/span> <span class=\"online-badge alt-modality\" data-jump=\"MDiv\" title=\"See the online MDiv\">Online<\/span><\/div>\n            <div class=\"code\">111 credits<\/div>\n            <div class=\"funded-note\">Tuition 100% funded<\/div>\n          <\/button>\n          <button type=\"button\" id=\"marCampusBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Master of Arts in Religion (MAR)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge campus\">On Campus<\/span> <span class=\"online-badge alt-modality\" data-jump=\"MAR\" title=\"See the online MAR\">Online<\/span><\/div>\n            <div class=\"code\">74 credits<\/div>\n            <div class=\"funded-note\">Tuition 100% funded<\/div>\n          <\/button>\n          <button type=\"button\" id=\"thmBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Master of Theology (ThM)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge\">Online<\/span> <span class=\"online-badge campus\">On Campus<\/span><\/div>\n            <div class=\"code\">6 courses<\/div>\n          <\/button>\n          <button type=\"button\" id=\"dminBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Doctor of Ministry (DMin)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge campus\">On Campus<\/span><\/div>\n            <div class=\"code\">8 modular courses<\/div>\n          <\/button>\n          <button type=\"button\" id=\"phdBtn\" class=\"program-card\" aria-pressed=\"false\">\n            <div class=\"name\">Doctor of Philosophy (PhD)<\/div>\n            <div class=\"card-badges\"><span class=\"online-badge campus\">On Campus<\/span><\/div>\n            <div class=\"code\">10 courses<\/div>\n          <\/button>\n        <\/div>\n      <\/section>\n\n        <aside class=\"left-column\">\n          <div class=\"step-label\">Step 2<\/div>\n          <h2 class=\"section-heading\">Financial Information<\/h2>\n          <div class=\"panel input-panel\">\n          <div class=\"panel-body\">\n            <div class=\"field\">\n              <div class=\"scholarship-reference\">\n                <div class=\"label-title\">Available Westminster scholarship support<\/div>\n                <ul class=\"scholarship-list\" id=\"scholarshipList\"><\/ul>\n                <p class=\"annotation\" id=\"scholarshipAnnotation\"><span id=\"scholarshipSelectNote\">Select the Westminster scholarship you hope to receive. <\/span>Scholarships are limited and require an application. Eligibility does not guarantee an award.<span id=\"scholarshipMatchNote\"> Matching Scholarship support applies automatically to the \"additional support\" section below.<\/span><\/p>\n              <\/div>\n            <\/div>\n\n            <div class=\"field\">\n              <label for=\"fundsRaised\" id=\"fundsRaisedLabel\">Additional support from outside resources*<\/label>\n              <input id=\"fundsRaised\" type=\"number\" min=\"0\" step=\"100\" value=\"0\" />\n              <div class=\"amount-buttons\" aria-label=\"Quick support amounts\">\n                <button type=\"button\" class=\"quick-amount\" data-amount=\"0\">$0<\/button>\n                <button type=\"button\" class=\"quick-amount\" data-amount=\"2500\">$2,500<\/button>\n                <button type=\"button\" class=\"quick-amount\" data-amount=\"5000\">$5,000<\/button>\n                <button type=\"button\" class=\"quick-amount\" data-amount=\"10000\">$10,000<\/button>\n                <button type=\"button\" class=\"quick-amount max-match\" id=\"maxMatchBtn\" hidden><\/button>\n              <\/div>\n              <div class=\"annotation\" id=\"fundsRaisedNote\">*Enter the amount of outside financial support you expect for the full length of your program, beyond Westminster scholarships. Sources may include church or ministry partners, employers, family, friends, VA or GI benefits, denominational scholarships, and others. <span id=\"matchEligibilityNote\">All of these lower your estimated cost, but only support from churches, ministry partners, employers, family, and friends counts toward a Westminster matching scholarship.<\/span><\/div>\n            <\/div>\n\n            <div class=\"field\">\n              <label for=\"startTerm\">When do you plan to start?<\/label>\n              <select id=\"startTerm\">\n                <option value=\"2027-01\">January 2027<\/option>\n                <option value=\"2027-03\">March 2027<\/option>\n                <option value=\"2027-06\">June 2027<\/option>\n                <option value=\"2027-09\">September 2027<\/option>\n              <\/select>\n              <div class=\"help\" id=\"rateIncreaseNote\">Tuition increases from $675 to $750/credit beginning in the June 2027 term.<\/div>\n            <\/div>\n\n            <div class=\"field mac-only\" id=\"sbcScholarshipBlock\" hidden>\n              <div class=\"label-title\">Would you like to have SBC courses recognized for credit in the MAC?<\/div>\n              <div class=\"choice-row\" role=\"group\" aria-label=\"SBC course recognition selection\">\n                <button type=\"button\" id=\"sbcScholarshipYes\" class=\"choice\" aria-pressed=\"false\">\n                  <strong>Yes<\/strong>\n                  <span>Select SBC courses may count for up to 15 credits in the MAC.<\/span>\n                <\/button>\n                <button type=\"button\" id=\"sbcScholarshipNo\" class=\"choice\" aria-pressed=\"true\">\n                  <strong>No / Not sure<\/strong>\n                  <span>Do not include SBC course recognition in this estimate.<\/span>\n                <\/button>\n              <\/div>\n\n              <div class=\"sub-panel\" id=\"sbcDetails\" hidden>\n                <p class=\"sub-panel-title\">SBC courses to recognize<\/p>\n                <div class=\"help\" style=\"margin-bottom:12px;\">\n                  Select the SBC courses you would like WTS to recognize. You may select up to 15 total credits. The recognition fee is $1,300 per selected SBC course.\n                <\/div>\n\n                <div class=\"course-select\" id=\"sbcCourseList\" role=\"group\" aria-label=\"SBC courses for WTS recognition\">\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 151\" data-title=\"Dynamics of Biblical Change\" data-credits=\"3\">\n                    <span><strong>PTC 151<\/strong> Dynamics of Biblical Change<\/span>\n                    <em>3 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 178\" data-title=\"Helping Relationships\" data-credits=\"3\">\n                    <span><strong>PTC 178<\/strong> Helping Relationships<\/span>\n                    <em>3 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 222\" data-title=\"Counseling &amp; Physiology\" data-credits=\"3\">\n                    <span><strong>PTC 222<\/strong> Counseling &amp; Physiology<\/span>\n                    <em>3 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 243\" data-title=\"Theology &amp; Secular Psychology\" data-credits=\"2\">\n                    <span><strong>PTC 243<\/strong> Theology &amp; Secular Psychology<\/span>\n                    <em>2 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 251\" data-title=\"Marriage Counseling\" data-credits=\"3\">\n                    <span><strong>PTC 251<\/strong> Marriage Counseling<\/span>\n                    <em>3 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 261\" data-title=\"Applied Theology of the Person\" data-credits=\"3\">\n                    <span><strong>PTC 261<\/strong> Applied Theology of the Person<\/span>\n                    <em>3 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 301\" data-title=\"Everyday Problems in Counseling\" data-credits=\"2\">\n                    <span><strong>PTC 301<\/strong> Everyday Problems in Counseling<\/span>\n                    <em>2 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 372\" data-title=\"Counseling Observation\" data-credits=\"3\">\n                    <span><strong>PTC 372<\/strong> Counseling Observation<\/span>\n                    <em>3 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 394\" data-title=\"Complex Problems in Counseling\" data-credits=\"3\">\n                    <span><strong>PTC 394<\/strong> Complex Problems in Counseling<\/span>\n                    <em>3 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 523\" data-title=\"Counseling in the Local Church\" data-credits=\"2\">\n                    <span><strong>PTC 523<\/strong> Counseling in the Local Church<\/span>\n                    <em>2 credits<\/em>\n                  <\/label>\n                  <label class=\"course-option\">\n                    <input type=\"checkbox\" class=\"sbc-course\" value=\"PTC 621\" data-title=\"Ethics in Biblical Counseling\" data-credits=\"2\">\n                    <span><strong>PTC 621<\/strong> Ethics in Biblical Counseling<\/span>\n                    <em>2 credits<\/em>\n                  <\/label>\n                <\/div>\n\n                <div class=\"recognition-note\" id=\"sbcSelectionNote\">Selected: 0 credits across 0 courses. Up to 15 credits may be recognized.<\/div>\n\n                <label for=\"sbcCoverage\" class=\"tooltip-label\" style=\"margin-top:14px;\">\n                  Possible recognition fee scholarship coverage\n                  <span class=\"info-tooltip\" tabindex=\"0\" aria-label=\"Limited scholarship funds are available that may cover part or all of your SBC course recognition fees. Use the slider to see the impact this scholarship may have on your total MAC cost.\">\n                    ?\n                    <span class=\"tooltip-box\" role=\"tooltip\">Limited scholarship funds are available that may cover part or all of your SBC course recognition fees. Use the slider to see the impact this scholarship may have on your total MAC cost.<\/span>\n                  <\/span>\n                <\/label>\n                <div class=\"range-row\">\n                  <input id=\"sbcCoverage\" type=\"range\" min=\"0\" max=\"100\" step=\"5\" value=\"100\" />\n                  <span class=\"range-value\" id=\"sbcCoverageLabel\">100%<\/span>\n                <\/div>\n                <div class=\"recognition-note\" id=\"sbcFeeNote\">Estimated possible recognition fee scholarship: $0<\/div>\n              <\/div>\n            <\/div>\n\n            <details class=\"advanced\">\n              <summary>Advanced options<\/summary>\n              <div class=\"field\" style=\"margin-top:16px;\">\n                <label for=\"creditsPerTerm\">Expected pace<\/label>\n                <select id=\"creditsPerTerm\">\n                  <option value=\"3\">1 course per term / 3 credits<\/option>\n                  <option value=\"6\">2 courses per term / 6 credits<\/option>\n                  <option value=\"9\">3 courses per term / 9 credits<\/option>\n                  <option value=\"custom\">Custom credits per term<\/option>\n                <\/select>\n              <\/div>\n\n              <div class=\"field\" id=\"customCreditsField\" style=\"display:none;\">\n                <label for=\"customCredits\">Custom credits per term<\/label>\n                <input id=\"customCredits\" type=\"number\" min=\"1\" max=\"15\" step=\"1\" value=\"3\" />\n              <\/div>\n            <\/details>\n\n          <\/div>\n          <\/div>\n\n        <\/aside>\n      <\/section>\n\n      <section class=\"results-section\">\n        <div class=\"step-label\" id=\"resultsStepLabel\">Step 3<\/div>\n        <h2 class=\"section-heading\">Your Estimated Cost After Support<\/h2>\n        <p class=\"annotation results-update-note\">Estimates update automatically as you change your answers above.<\/p>\n          <article class=\"result-card\" aria-label=\"Estimated cost after support\">\n\n            <div class=\"result-mini-grid\">\n              <div class=\"mini\">\n                <div class=\"mini-label\" id=\"miniGrossLabel\">Tuition Before Support<\/div>\n                <div class=\"mini-value\" id=\"miniGross\">$24,300<\/div>\n              <\/div>\n              <div class=\"mini bucket-match\">\n                <div class=\"mini-label\">Westminster Scholarship Support<\/div>\n                <div class=\"mini-value\" id=\"miniMatch\">$0<\/div>\n              <\/div>\n              <div class=\"mini bucket-raised\" id=\"miniRemainingCard\">\n                <div class=\"mini-label\" id=\"miniRemainingLabel\">Outside Support*<\/div>\n                <div class=\"mini-value\" id=\"miniRemaining\">$0<\/div>\n              <\/div>\n              <div class=\"mini bucket-student\" id=\"miniNetCard\">\n                <div class=\"mini-label\">Your Estimated Tuition Cost After Support<\/div>\n                <div class=\"mini-value\" id=\"netPrice\">$24,300<\/div>\n              <\/div>\n              <div class=\"mini mac-only-row\" id=\"miniCreditsCard\" hidden>\n                <div class=\"mini-label\">WTS Credits Remaining<\/div>\n                <div class=\"mini-value\" id=\"miniCreditsRemaining\">61<\/div>\n              <\/div>\n              <div class=\"mini mac-only-row\" id=\"miniSbcCard\" hidden>\n                <div class=\"mini-label\">Possible SBC Fee Scholarship<\/div>\n                <div class=\"mini-value\" id=\"miniSbcScholarship\">$0<\/div>\n              <\/div>\n            <\/div>\n\n            <div class=\"mix-panel\" aria-label=\"Cost and savings breakdown chart\">\n              <div class=\"mix-program\" id=\"mixProgram\"><\/div>\n              <div class=\"mix-title\" id=\"mixTitle\">Cost &amp; Savings Breakdown<\/div>\n              <div class=\"mix-content\">\n                <div class=\"pie-wrap\">\n                  <svg class=\"pie-svg\" viewBox=\"0 0 220 220\" role=\"img\" aria-labelledby=\"pieTitle pieDesc\">\n                    <title id=\"pieTitle\">Cost and scholarship mix<\/title>\n                    <desc id=\"pieDesc\">Share of total estimated cost paid by the student, covered by outside support, and covered by WTS scholarship support.<\/desc>\n                    <path id=\"sliceStudent\" class=\"pie-slice student\" d=\"\"><\/path>\n                    <path id=\"sliceRaised\" class=\"pie-slice raised\" d=\"\"><\/path>\n                    <path id=\"sliceMatch\" class=\"pie-slice match\" d=\"\"><\/path>\n                    <text id=\"labelStudent\" class=\"pie-label\" x=\"110\" y=\"110\">0%<\/text>\n                    <text id=\"labelRaised\" class=\"pie-label\" x=\"110\" y=\"110\">0%<\/text>\n                    <text id=\"labelMatch\" class=\"pie-label\" x=\"110\" y=\"110\">0%<\/text>\n                  <\/svg>\n                <\/div>\n                <div class=\"legend\">\n                  <div class=\"legend-item\">\n                    <span class=\"dot match\"><\/span>\n                    <span><strong>Westminster Scholarship Support<\/strong><\/span>\n                    <span class=\"amount\" id=\"legendMatch\">$0<\/span>\n                  <\/div>\n                  <div class=\"legend-item\">\n                    <span class=\"dot raised\"><\/span>\n                    <span><strong>Outside Support<\/strong><\/span>\n                    <span class=\"amount\" id=\"legendRaised\">$0<\/span>\n                  <\/div>\n                  <div class=\"legend-item\">\n                    <span class=\"dot student\"><\/span>\n                    <span><strong>Your Estimated Tuition Cost After Support<\/strong><\/span>\n                    <span class=\"amount\" id=\"legendStudent\">$24,300<\/span>\n                  <\/div>\n                <\/div>\n              <\/div>\n            <\/div>\n            <p class=\"match-footnote\" id=\"resultFootnote\"><\/p>\n          <\/article>\n        <div class=\"contact-cta\">\n          <a class=\"contact-button\" href=\"https://www.wts.edu/contact-us\">Contact Us<\/a>\n        <\/div>\n      <\/section>\n\n      <section class=\"print-only print-explainer\" aria-label=\"How to read this estimate\">\n        <h2>How to Read This Estimate<\/h2>\n        <div class=\"print-explainer-grid\">\n          <p><strong>Outside support<\/strong> is the full-program amount expected from a church, donor, or employer.<\/p>\n          <p><strong>WTS matching support<\/strong> is calculated automatically up to the selected program's limit.<\/p>\n          <p><strong>Estimated cost after support<\/strong> is the remaining amount the student would be responsible for under these assumptions.<\/p>\n        <\/div>\n        <p class=\"print-scholarship-note\"><strong>Important:<\/strong> Matching scholarships are limited, require an application, and are not guaranteed.<\/p>\n      <\/section>\n      <section class=\"full-width-summary-section\">\n        <div class=\"table-block horizontal-summary\">\n            <div class=\"table-header\">\n              <h2>Estimate Summary<\/h2>\n              <span id=\"summaryModeLabel\">Scholarship included<\/span>\n            <\/div>\n            <div class=\"summary-strip\" aria-label=\"Estimate summary\">\n              <div class=\"summary-tile mac-only-row\" id=\"summaryCreditsRecognizedRow\" hidden>\n                <span class=\"tile-label\">SBC credits recognized<\/span>\n                <span class=\"tile-value\" id=\"summaryCreditsRecognized\">0<\/span>\n              <\/div>\n              <div class=\"summary-tile mac-only-row\" id=\"summaryCreditsRemainingRow\" hidden>\n                <span class=\"tile-label\">WTS credits remaining<\/span>\n                <span class=\"tile-value\" id=\"summaryCreditsRemaining\">61<\/span>\n              <\/div>\n              <div class=\"summary-tile\">\n                <span class=\"tile-label\">WTS tuition remaining<\/span>\n                <span class=\"tile-value\" id=\"summaryGross\">$24,300<\/span>\n              <\/div>\n              <div class=\"summary-tile\">\n                <span class=\"tile-label\">Support you raise<\/span>\n                <span class=\"tile-value\" id=\"summaryRaised\">-$0<\/span>\n              <\/div>\n              <div class=\"summary-tile\">\n                <span class=\"tile-label\">WTS matching scholarship<\/span>\n                <span class=\"tile-value\" id=\"summaryMatch\">-$0<\/span>\n              <\/div>\n              <div class=\"summary-tile\" id=\"summaryRemainingMatchRow\">\n                <span class=\"tile-label\">More support eligible for match<\/span>\n                <span class=\"tile-value\" id=\"summaryRemainingMatch\">$5,000<\/span>\n              <\/div>\n              <div class=\"summary-tile mac-only-row\" id=\"summarySbcFeeRow\" hidden>\n                <span class=\"tile-label\">SBC recognition fee<\/span>\n                <span class=\"tile-value\" id=\"summarySbcFee\">$0<\/span>\n              <\/div>\n              <div class=\"summary-tile mac-only-row\" id=\"summarySbcScholarshipRow\" hidden>\n                <span class=\"tile-label\">Possible SBC fee scholarship<\/span>\n                <span class=\"tile-value\" id=\"summarySbcScholarship\">-$0<\/span>\n              <\/div>\n              <div class=\"summary-tile total\">\n                <span class=\"tile-label\">Estimated cost after support<\/span>\n                <span class=\"tile-value\" id=\"summaryNet\">$24,300<\/span>\n              <\/div>\n            <\/div>\n            <div class=\"notice\">\n              <strong>Planning estimate only.<\/strong> This is not a final scholarship award, financial aid offer, or bill. Final tuition, fees, scholarships, and payment options are determined by Westminster Theological Seminary after application and scholarship review.\n            <\/div>\n          <\/div>\n      <\/section>\n\n      <section class=\"full-width-term-section\">\n        <div class=\"table-block term-block\">\n          <div class=\"table-header\">\n            <h2>Estimated WTS Tuition By Term<\/h2>\n            <span id=\"termCountLabel\">12 terms<\/span>\n          <\/div>\n          <p class=\"print-only print-table-note\">Support and matching scholarship amounts are allocated proportionally across terms for planning purposes. Actual billing and scholarship posting may differ.<\/p>\n          <div class=\"table-scroll\">\n            <table aria-label=\"Term by term estimate\">\n              <thead>\n                <tr>\n                  <th>Term<\/th>\n                  <th class=\"money\">Credits<\/th>\n                  <th class=\"money\">WTS tuition<\/th>\n                  <th class=\"money\">Support raised<\/th>\n                  <th class=\"money\">WTS match<\/th>\n                  <th class=\"money\">Estimated cost after support<\/th>\n                <\/tr>\n              <\/thead>\n              <tbody id=\"termTable\"><\/tbody>\n            <\/table>\n          <\/div>\n        <\/div>\n\n        <div class=\"action-row\">\n            <a class=\"btn primary\" id=\"emailLink\" href=\"#\">Email Me This Estimate<\/a>\n            <a class=\"btn secondary\" href=\"mailto:admissions@wts.edu?subject=Scholarship%20Review%20Request\">Request Scholarship Review<\/a>\n            <button type=\"button\" class=\"btn secondary\" onclick=\"preparePrint(); window.print()\">Print Estimate<\/button>\n          <\/div>\n      <\/section>\n\n      <section class=\"market-comparison-section\">\n        <div class=\"table-block market-block\">\n          <div class=\"table-header\">\n            <div>\n              <h2>Online Program Cost Comparison<\/h2>\n              <p class=\"table-subtitle\" id=\"comparisonSubtitle\">Comparable online or mostly online theological, ministry, and counseling programs using an effective all-in per-credit charge.<\/p>\n            <\/div>\n            <span id=\"comparisonTypeLabel\">Program comparison<\/span>\n          <\/div>\n\n          <div class=\"comparison-callout\" id=\"comparisonCallout\">\n            This comparison converts published tuition and mandatory recurring fees into an effective per-credit charge for each institution.\n          <\/div>\n\n          <div class=\"table-scroll\">\n            <table aria-label=\"Online program cost comparison\">\n              <thead>\n                <tr>\n                  <th class=\"money\">Rank<\/th>\n                  <th>Institution<\/th>\n                  <th>Comparable program<\/th>\n                  <th class=\"money\">Credits<\/th>\n                  <th class=\"money\">Effective charge / credit<\/th>\n                  <th class=\"money\">Estimated tuition + fees<\/th>\n                  <th>Included fees and delivery note<\/th>\n                <\/tr>\n              <\/thead>\n              <tbody id=\"comparisonTable\"><\/tbody>\n            <\/table>\n          <\/div>\n\n          <p class=\"comparison-note\">\n            Comparison excludes books, housing, travel, application fees, graduation fees, and individual scholarship awards unless noted. Mandatory recurring enrollment, technology, service, and similar fees are spread across the credits required for each degree to create the effective per-credit charge. DTS, Covenant, SBTS, Gordon-Conwell, and RTS figures are based on published tuition/program information available when this tool was prepared. Published tuition and fee information should be verified periodically, as institutional rates and policies may change.\n          <\/p>\n          <p class=\"print-only print-comparison-note\">Competitor estimates include published tuition and mandatory recurring fees. They exclude books, travel, application and graduation fees, and individual financial aid. Verify current institutional rates before enrollment.<\/p>\n        <\/div>\n      <\/section>\n    <\/div>\n  <\/main>\n\n  \n";
+  var FONTS_URL = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap";
+  var currentScript = document.currentScript;
+
+  // @font-face must live in the light DOM; shadow content can then use it.
+  function ensureFonts() {
+    if (document.querySelector("link[data-wts-estimator-fonts]")) return;
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = FONTS_URL;
+    link.setAttribute("data-wts-estimator-fonts", "");
+    document.head.appendChild(link);
+  }
+
+  function runCalculator(root, app) {
+
+    // Online programs share one static theme; the theme only shifts when an
+    // on-campus (100% funded) program is selected, so modality stands out.
+    const ONLINE_THEME = { accent: "#56575a", accentDark: "#3f4042", accentSoft: "#ececed" };
+    const CAMPUS_THEME = { accent: "#8c2233", accentDark: "#6e1726", accentSoft: "#f5e9eb" };
+
+    const CONFIG = {
+      programs: {
+        MATS: {
+          name: "MATS",
+          fullName: "Master of Arts in Theological Studies",
+          credits: 36,
+          matchType: "fixedCap",
+          fixedCap: 5000,
+          bucket: "online",
+          termSystem: "online",
+          theme: ONLINE_THEME,
+          description: "dollar-for-dollar match up to $5,000"
+        },
+        MAC: {
+          name: "MAC",
+          fullName: "Master of Arts in Counseling",
+          credits: 61,
+          // Westminster matches outside support dollar-for-dollar up to
+          // 25% of tuition, so a fully matched student reduces tuition
+          // by up to 50% (25% raised + 25% matched).
+          matchType: "percentCap",
+          percentCap: 0.25,
+          bucket: "online",
+          termSystem: "online",
+          theme: ONLINE_THEME,
+          description: "dollar-for-dollar match up to 25% of tuition, combined reduction up to 50%"
+        },
+        MDiv: {
+          name: "MDiv",
+          fullName: "Master of Divinity",
+          credits: 111,
+          bucket: "online",
+          // Online-program matching scholarship: $675 per term through the
+          // March 2027 term; beginning with the June 2027 term (AY27-28)
+          // Westminster instead matches outside support dollar-for-dollar
+          // up to 25% of tuition. Modeled per term, like the rate increase.
+          matchType: "onlineHybrid",
+          perTermMatch: 675,
+          percentAfter: 0.25,
+          termSystem: "residential",
+          theme: ONLINE_THEME,
+          description: "dollar-for-dollar match, $675 per term now, up to 25% of tuition from Summer 2027 (AY27-28)"
+        },
+        MAR: {
+          name: "MAR",
+          fullName: "Master of Arts in Religion",
+          credits: 74,
+          bucket: "online",
+          matchType: "onlineHybrid",
+          perTermMatch: 675,
+          percentAfter: 0.25,
+          termSystem: "residential",
+          theme: ONLINE_THEME,
+          description: "dollar-for-dollar match, $675 per term now, up to 25% of tuition from Summer 2027 (AY27-28)"
+        },
+        MDivCampus: {
+          name: "MDiv",
+          fullName: "Master of Divinity, General Ministries",
+          displayTitle: "Master of Divinity (MDiv), General Ministries",
+          credits: 111,
+          bucket: "campus",
+          funded: true,
+          // 2026-2027 academic catalog: full-time residential tuition is
+          // $53,000 per academic year. The scholarship value is the
+          // annual rate times the program length, per admissions, with
+          // no per-credit price shown or used.
+          annualRate: 53000,
+          years: 4,
+          termSystem: "residential",
+          theme: CAMPUS_THEME,
+          description: "tuition 100% funded for admitted students"
+        },
+        MDivFellows: {
+          name: "MDiv",
+          fullName: "Master of Divinity, Pastoral Fellows",
+          displayTitle: "Master of Divinity (MDiv), Pastoral Fellows",
+          credits: 111,
+          bucket: "campus",
+          funded: true,
+          // 2026-2027 academic catalog: Pastoral Fellows tuition is
+          // $61,000 per academic year.
+          annualRate: 61000,
+          years: 4,
+          termSystem: "residential",
+          theme: CAMPUS_THEME,
+          description: "tuition 100% funded for admitted students"
+        },
+        MARCampus: {
+          name: "MAR",
+          fullName: "Master of Arts in Religion",
+          credits: 74,
+          bucket: "campus",
+          funded: true,
+          // 2026-2027 academic catalog: $53,000 per academic year.
+          annualRate: 53000,
+          years: 3,
+          termSystem: "residential",
+          theme: CAMPUS_THEME,
+          description: "tuition 100% funded for admitted students"
+        },
+        // Course-priced postgraduate programs (per-course tuition rather
+        // than per-credit; the start-term rate increase does not apply).
+        ThM: {
+          name: "ThM",
+          fullName: "Master of Theology",
+          bucket: "advanced",
+          coursePriced: true,
+          courses: 6,
+          courseRate: 4350,
+          matchPct: 0.20,
+          modality: "both",
+          theme: ONLINE_THEME,
+          description: "20% matching grant for full-time students, any modality"
+        },
+        DMin: {
+          name: "DMin",
+          fullName: "Doctor of Ministry",
+          bucket: "advanced",
+          coursePriced: true,
+          // Best current cost estimate per admissions: coursework
+          // (8 courses x $3,650 = $29,200) + one year of the $1,750
+          // continuation fee + the $2,600 thesis fee = $33,550. Students
+          // finishing over more years pay the continuation fee again, so
+          // many land at $35,300 or $37,050; the estimate assumes one
+          // continuation year. Up to 20% baseline scholarship and up to
+          // a 20% Ministry Partnership Match on ministry partner
+          // payments.
+          trueCost: 33550,
+          baselinePct: 0.20,
+          matchPct: 0.20,
+          modality: "campus",
+          theme: CAMPUS_THEME,
+          description: "20% baseline scholarship plus a 20% ministry partnership match"
+        },
+        PhD: {
+          name: "PhD",
+          fullName: "Doctor of Philosophy",
+          bucket: "advanced",
+          coursePriced: true,
+          courses: 10,
+          courseRate: 5000,
+          matchPct: 0,
+          modality: "campus",
+          theme: CAMPUS_THEME,
+          description: "scholarships determined individually by the committee"
+        },
+        // Certificates: 9 credits each at the online per-credit rate, no
+        // Westminster scholarships currently. Theological Studies
+        // certificates follow the four-term calendar; the registrar groups
+        // the Biblical Languages certificates with the semester calendar
+        // (rate increase effective Summer 2027 for them).
+        CertTSC: {
+          name: "TSC",
+          fullName: "Theological Studies Certificate",
+          credits: 9,
+          bucket: "online",
+          certificate: true,
+          stackable: true,
+          matchType: "none",
+          termSystem: "online",
+          theme: ONLINE_THEME,
+          description: "certificate program, no scholarships currently apply"
+        },
+        CertBLC: {
+          name: "BLC",
+          fullName: "Biblical Languages Certificate",
+          credits: 9,
+          bucket: "online",
+          certificate: true,
+          matchType: "none",
+          termSystem: "residential",
+          theme: ONLINE_THEME,
+          description: "certificate program, no scholarships currently apply"
+        }
+      },
+      currentRate: 675,
+      futureRate: 750,
+      futureRateStart: "2027-06",
+      termCycle: ["06", "09", "01", "03"],
+      // The $100 application fee is deliberately excluded everywhere: it
+      // is a pre-program admin expense, not program cost (it would not
+      // appear on a 1098-T). Hedwig excludes it too. The enrollment
+      // deposit ($500 online) and Commitment Fee ($1,000 residential
+      // MDiv/MAR) are surfaced as notes: the deposit is applied toward
+      // tuition and the Commitment Fee covers the first four terms of
+      // the $250 per-term residential Community Life Fee.
+      // Advanced-degree deposits are still unconfirmed and omitted.
+      onlineEnrollmentDeposit: 500,
+      residentialCommitmentFee: 1000,
+      residentialTermFee: 250,
+      sbcRecognitionFeePerCourse: 1300,
+      sbcMaxCredits: 15
+    };
+
+
+    const MARKET_COMPARISONS = {
+      mdiv: [
+        { institution: "Reformed Theological Seminary", program: "MDiv", credits: 106, rate: 654, feeModel: "rtsGlobal", note: "Includes the $60-per-credit Global technology fee. Hybrid MDiv includes residential requirements.", sourceUrl: "https://rts.edu/admissions/tuition/" },
+        { institution: "Dallas Theological Seminary", program: "ThM", credits: 120, rate: 720, feeModel: "dts", note: "Includes published general, technology, and spiritual-formation fees. Mostly online except preaching requirements.", sourceUrl: "https://www.dts.edu/start-your-journey/tuition-aid/2026-27-tuition-fees" },
+        { institution: "Covenant Theological Seminary", program: "MDiv", credits: 99, rate: 645, feeModel: "covenant", oneTimeFee: 350, note: "Includes $120 enrollment and $190 technology fees per term, plus the one-time $350 Logos license.", sourceUrl: "https://www.covenantseminary.edu/tuition-scholarships" },
+        { institution: "Southern Baptist Theological Seminary", program: "MDiv, non-SBC online rate", credits: 84, rate: 573, feeModel: "sbts", note: "Includes the $200 online enrollment fee per semester and $100 technology fee per online term.", sourceUrl: "https://www.sbts.edu/financial-aid/tuition/" },
+        { institution: "Gordon-Conwell Theological Seminary", program: "MDiv", credits: 90, rate: 675, feeModel: "gcts", note: "Includes published service and technology fees using the latest available student expense worksheet. Tuition uses the published 2026–2027 net rate after Trustee Scholarship.", sourceUrl: "https://www.gordonconwell.edu/admissions/tuition-financial-aid/" }
+      ],
+      counseling: [
+        {
+          institution: "Dallas Theological Seminary",
+          program: "MA in Counseling Ministries",
+          credits: 66,
+          rate: 720,
+          feeModel: "dts",
+          note: "Online nonclinical counseling-ministry degree. Includes published general, technology, and spiritual-formation fees.",
+          sourceUrl: "https://www.dts.edu/academics/degrees-programs/master-of-arts-in-counseling-ministries"
+        },
+        {
+          institution: "Southern Baptist Theological Seminary",
+          program: "MA in Biblical Counseling and Practical Theology",
+          credits: 60,
+          rate: 573,
+          feeModel: "sbts",
+          note: "Fully online, non-licensure biblical counseling degree using the non-SBC online tuition rate. Includes online enrollment and technology fees.",
+          sourceUrl: "https://www.sbts.edu/degree-programs/master-of-arts/master-of-arts-in-biblical-counseling/"
+        },
+        {
+          institution: "Covenant Theological Seminary",
+          program: "MA in Counseling",
+          credits: 75,
+          rate: 645,
+          feeModel: "covenant",
+          oneTimeFee: 525,
+          note: "CACREP-accredited 75-credit counseling degree. Covenant lists this program as residential rather than online; included here for market context. Includes recurring enrollment and technology fees plus the published $525 MAC licensure fee.",
+          sourceUrl: "https://www.covenantseminary.edu/mac"
+        },
+
+        {
+          institution: "Gordon-Conwell Theological Seminary",
+          program: "MA in Christian Counseling",
+          credits: 66,
+          rate: 675,
+          feeModel: "gcts",
+          note: "Primarily online CACREP-accredited clinical counseling degree with annual in-person residency requirements. Includes published service and technology fees.",
+          sourceUrl: "https://www.gordonconwell.edu/degrees/counseling/macc/"
+        }
+      ],
+      ma: [
+        { institution: "Reformed Theological Seminary", program: "MATS", credits: 66, rate: 654, feeModel: "rtsGlobal", note: "Includes the $60-per-credit Global technology fee. Fully online through RTS Global Education.", sourceUrl: "https://rts.edu/admissions/tuition/" },
+        { institution: "Dallas Theological Seminary", program: "MBTS", credits: 36, rate: 720, feeModel: "dts", note: "Includes published general, technology, and spiritual-formation fees. Fully online.", sourceUrl: "https://www.dts.edu/start-your-journey/tuition-aid/2026-27-tuition-fees" },
+        { institution: "Dallas Theological Seminary", program: "MACS", credits: 63, rate: 720, feeModel: "dts", note: "Includes published general, technology, and spiritual-formation fees. Online MA comparison.", sourceUrl: "https://www.dts.edu/start-your-journey/tuition-aid/2026-27-tuition-fees" },
+        { institution: "Covenant Theological Seminary", program: "MATS", credits: 54, rate: 645, feeModel: "covenant", note: "Includes $120 enrollment and $190 technology fees per enrolled term. Fully online.", sourceUrl: "https://www.covenantseminary.edu/tuition-scholarships" },
+        { institution: "Covenant Theological Seminary", program: "MABTS", credits: 66, rate: 645, feeModel: "covenant", oneTimeFee: 350, note: "Includes $120 enrollment and $190 technology fees per term, plus the one-time $350 Logos license. Fully online.", sourceUrl: "https://www.covenantseminary.edu/tuition-scholarships" },
+        { institution: "Southern Baptist Theological Seminary", program: "MA", credits: "48–62", creditRange: [48, 62], rate: 573, feeModel: "sbts", note: "Includes the $200 online enrollment fee per semester and $100 technology fee per online term. Uses the non-SBC online rate.", sourceUrl: "https://www.sbts.edu/financial-aid/tuition/" },
+        { institution: "Gordon-Conwell Theological Seminary", program: "MATS", credits: 60, rate: 675, feeModel: "gcts", note: "Includes published service and technology fees using the latest available student expense worksheet. Tuition uses the published 2026–2027 net rate after Trustee Scholarship.", sourceUrl: "https://www.gordonconwell.edu/admissions/tuition-financial-aid/" }
+      ]
+    };
+
+
+    let selectedProgram = "MATS";
+    const scholarshipIncluded = true;
+    let sbcScholarshipIncluded = false;
+
+    // Westminster scholarship support shown in the reference dropdown,
+    // filtered to the selected program. Not exhaustive; sourced from the
+    // matching rules above and the scholarships published on wts.edu.
+    // Entries with a `calc` are selectable in the scholarship picker (one
+    // scholarship at a time); entries without stay informational notes.
+    // calc.type "match" uses the program's matching rules; "percentTuition"
+    // is an automatic tuition scholarship with no outside-support match.
+    const SCHOLARSHIPS = {
+      MATS: [
+        { id: "match", calc: { type: "match" }, name: "Matching Scholarship", detail: "Dollar-for-dollar match on your additional outside support, up to $5,000." },
+        { id: "awm", calc: { type: "percentTuition", pct: 0.25 }, name: "Advancing Women's Ministry Scholarship", detail: "25% tuition coverage for qualifying students." },
+        { id: "missionary", calc: { type: "percentTuition", pct: 0.20 }, name: "Missionary Scholarship", detail: "20% tuition scholarship for active missionaries, or those entering the field within 1 to 2 years, verified by a sending missions agency." },
+        { id: "educator", calc: { type: "percentTuition", pct: 0.20 }, name: "Christian Educator Scholarship", detail: "20% tuition scholarship for those employed full-time in an educational setting: a school, homeschool program, educational resource organization, or church." },
+        { id: "churchOfficer", calc: { type: "percentTuition", pct: 0.20 }, name: "Church Officer Scholarship", detail: "20% tuition scholarship for active church officers (teaching or ruling elders, pastors, deacons) in any denomination, confirmed by pastoral reference." }
+      ],
+      MAC: [
+        { id: "match", calc: { type: "match" }, name: "Matching Scholarship", detail: "Dollar-for-dollar match on your additional outside support, up to 25% of tuition. Fully matched, it reduces your tuition by up to 50%." },
+        { name: "SBC Recognition Fee Scholarship", detail: "May cover part or all of SBC course recognition fees ($1,300 per course)." },
+        { name: "International Leader Scholarship", detail: "A 50% tuition award for distinguished international leaders who demonstrate a vision for advancing biblical counseling in their local communities, churches, regions, or countries." }
+      ],
+      MDiv: [
+        { id: "match", calc: { type: "match" }, name: "Matching Scholarship", detail: "Dollar-for-dollar match on your additional outside support: up to $675 per term through the Spring 2027 term, then up to 25% of tuition beginning with the Summer 2027 term (AY27-28). Requires a minimum of 4 credits per term and a 3.0 GPA." },
+        { name: "International Match", detail: "Up to a 50% match for qualifying international students. Very limited availability." }
+      ],
+      MAR: [
+        { id: "match", calc: { type: "match" }, name: "Matching Scholarship", detail: "Dollar-for-dollar match on your additional outside support: up to $675 per term through the Spring 2027 term, then up to 25% of tuition beginning with the Summer 2027 term (AY27-28). Requires a minimum of 4 credits per term and a 3.0 GPA." },
+        { name: "International Match", detail: "Up to a 50% match for qualifying international students. Very limited availability." }
+      ],
+      MDivCampus: [
+        { name: "Full Tuition Funding", detail: "Tuition is 100% funded for admitted full-time students, thanks to the generosity of Westminster's donor community. At $53,000/year, the scholarship is worth $212,000 over four years." }
+      ],
+      MDivFellows: [
+        { name: "Full Tuition Funding", detail: "Tuition is 100% funded for admitted full-time students, thanks to the generosity of Westminster's donor community. At $61,000/year, the scholarship is worth $244,000 over four years." }
+      ],
+      MARCampus: [
+        { name: "Full Tuition Funding", detail: "Tuition is 100% funded for admitted full-time students, thanks to the generosity of Westminster's donor community. At $53,000/year, the scholarship is worth $159,000 over three years." }
+      ],
+      ThM: [
+        { name: "Matching Grant", detail: "Dollar-for-dollar match on your additional outside support for full-time ThM students, up to 20% of total tuition, in any modality." }
+      ],
+      DMin: [
+        { name: "Baseline Scholarship", detail: "Up to $6,800 (20% of the total program cost), applied automatically." },
+        { name: "Ministry Partnership Match", detail: "Dollar-for-dollar match on ministry partner (e.g. church) payments, up to $6,710 (20% of the total program cost)." }
+      ],
+      PhD: [
+        { name: "Committee Scholarships", detail: "PhD scholarships are determined individually by the committee and are not included in this estimate." }
+      ],
+      CertTSC: [
+        { name: "Certificate Programs", detail: "No Westminster scholarships currently apply to certificate programs. Outside support you raise still reduces your cost." }
+      ],
+      CertBLC: [
+        { name: "Certificate Programs", detail: "No Westminster scholarships currently apply to certificate programs. Outside support you raise still reduces your cost." }
+      ]
+    };
+
+    const $ = id => root.getElementById(id);
+    const els = {
+      matsBtn: $("matsBtn"), macBtn: $("macBtn"), mdivBtn: $("mdivBtn"), marBtn: $("marBtn"),
+      mdivCampusBtn: $("mdivCampusBtn"), mdivFellowsBtn: $("mdivFellowsBtn"), marCampusBtn: $("marCampusBtn"),
+      thmBtn: $("thmBtn"), dminBtn: $("dminBtn"), phdBtn: $("phdBtn"),
+      certTSCBtn: $("certTSCBtn"), certBLCBtn: $("certBLCBtn"),
+      fundsRaisedLabel: $("fundsRaisedLabel"), resultsStepLabel: $("resultsStepLabel"),
+      rateIncreaseNote: $("rateIncreaseNote"), scholarshipAnnotation: $("scholarshipAnnotation"), scholarshipSelectNote: $("scholarshipSelectNote"), scholarshipMatchNote: $("scholarshipMatchNote"), matchEligibilityNote: $("matchEligibilityNote"),
+      mixTitle: $("mixTitle"), mixProgram: $("mixProgram"), resultFootnote: $("resultFootnote"), miniRemainingLabel: $("miniRemainingLabel"),
+      maxMatchBtn: $("maxMatchBtn"),
+      scholarshipList: $("scholarshipList"),
+      fundsRaised: $("fundsRaised"), startTerm: $("startTerm"),
+      creditsPerTerm: $("creditsPerTerm"), customCreditsField: $("customCreditsField"),
+      customCredits: $("customCredits"),
+      sbcScholarshipBlock: $("sbcScholarshipBlock"), sbcScholarshipYes: $("sbcScholarshipYes"), sbcScholarshipNo: $("sbcScholarshipNo"),
+      sbcDetails: $("sbcDetails"), sbcCourseList: $("sbcCourseList"), sbcSelectionNote: $("sbcSelectionNote"), sbcCoverage: $("sbcCoverage"), sbcCoverageLabel: $("sbcCoverageLabel"), sbcFeeNote: $("sbcFeeNote"),
+      netPrice: $("netPrice"),
+      miniMatch: $("miniMatch"), miniRemaining: $("miniRemaining"), miniRemainingCard: $("miniRemainingCard"), miniGross: $("miniGross"), miniGrossLabel: $("miniGrossLabel"),
+      miniCreditsCard: $("miniCreditsCard"), miniCreditsRemaining: $("miniCreditsRemaining"),
+      miniSbcCard: $("miniSbcCard"), miniSbcScholarship: $("miniSbcScholarship"),
+      summaryModeLabel: $("summaryModeLabel"),
+      summaryCreditsRecognizedRow: $("summaryCreditsRecognizedRow"), summaryCreditsRemainingRow: $("summaryCreditsRemainingRow"),
+      summaryCreditsRecognized: $("summaryCreditsRecognized"), summaryCreditsRemaining: $("summaryCreditsRemaining"),
+      summaryGross: $("summaryGross"), summaryRaised: $("summaryRaised"),
+      summaryMatch: $("summaryMatch"), summaryRemainingMatch: $("summaryRemainingMatch"), summaryRemainingMatchRow: $("summaryRemainingMatchRow"),
+      summarySbcFeeRow: $("summarySbcFeeRow"), summarySbcScholarshipRow: $("summarySbcScholarshipRow"),
+      summarySbcFee: $("summarySbcFee"), summarySbcScholarship: $("summarySbcScholarship"), summaryNet: $("summaryNet"),
+      legendStudent: $("legendStudent"), legendRaised: $("legendRaised"), legendMatch: $("legendMatch"),
+      comparisonSubtitle: $("comparisonSubtitle"), comparisonTypeLabel: $("comparisonTypeLabel"), comparisonCallout: $("comparisonCallout"), comparisonTable: $("comparisonTable"),
+      termCountLabel: $("termCountLabel"), termTable: $("termTable"), emailLink: $("emailLink"),
+      sliceStudent: $("sliceStudent"), sliceRaised: $("sliceRaised"), sliceMatch: $("sliceMatch"),
+      labelStudent: $("labelStudent"), labelRaised: $("labelRaised"), labelMatch: $("labelMatch"),
+      printProgram: $("printProgram"), printCredits: $("printCredits"), printStartTerm: $("printStartTerm"),
+      printCompletionTerm: $("printCompletionTerm"), printPace: $("printPace"), printDate: $("printDate")
+    };
+
+    function money(value, cents = false) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency", currency: "USD",
+        minimumFractionDigits: cents ? 2 : 0,
+        maximumFractionDigits: cents ? 2 : 0
+      }).format(value);
+    }
+
+    function num(value) {
+      return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value);
+    }
+
+    function termKey(year, month) {
+      return `${year}-${String(month).padStart(2, "0")}`;
+    }
+
+    function parseTerm(term) {
+      const [year, month] = term.split("-").map(Number);
+      return { year, month };
+    }
+
+    // MAC and MATS run four terms per year (January, March, June,
+    // September); MDiv and MAR, online and residential alike, run three
+    // semesters (Spring, Summer, Fall). termSystem picks the calendar.
+    function cycleFor(termSystem) {
+      return termSystem === "residential"
+        ? ["06", "09", "01"]
+        : ["06", "09", "01", "03"];
+    }
+
+    function nextTerm(key, termSystem = "online") {
+      let { year, month } = parseTerm(key);
+      const cycle = cycleFor(termSystem);
+      const monthText = String(month).padStart(2, "0");
+      const idx = cycle.indexOf(monthText);
+      const nextMonth = cycle[(idx + 1) % cycle.length];
+      if (Number(nextMonth) < month) year += 1;
+      return termKey(year, Number(nextMonth));
+    }
+
+    function termLabel(key, termSystem = "online") {
+      const [year, month] = key.split("-").map(Number);
+      const names = termSystem === "residential"
+        ? { 1: "Spring", 6: "Summer", 9: "Fall" }
+        : { 1: "January", 3: "March", 6: "June", 9: "September" };
+      return `${names[month]} ${year}`;
+    }
+
+    function rateForTerm(key) {
+      // Term keys are zero-padded "YYYY-MM" strings, so lexicographic
+      // comparison is chronological.
+      return key >= CONFIG.futureRateStart ? CONFIG.futureRate : CONFIG.currentRate;
+    }
+
+    function buildTerms(totalCredits, creditsPerTerm, startTerm, termSystem = "online") {
+      let remaining = totalCredits;
+      let term = startTerm;
+      const rows = [];
+      while (remaining > 0) {
+        const credits = Math.min(remaining, creditsPerTerm);
+        const rate = rateForTerm(term);
+        rows.push({ term, label: termLabel(term, termSystem), credits, rate, tuition: credits * rate });
+        remaining -= credits;
+        term = nextTerm(term, termSystem);
+      }
+      return rows;
+    }
+
+    // The start-term choices depend on the program's calendar: no March
+    // term exists for MDiv/MAR, and their terms carry semester names.
+    // September 2026 was removed once that term's enrollment closed, so
+    // January 2027 is the earliest (and default) start.
+    const START_TERM_KEYS = ["2027-01", "2027-03", "2027-06", "2027-09"];
+
+    function refreshStartTermOptions(program) {
+      if (!els.startTerm) return;
+      const cycle = cycleFor(program.termSystem);
+      const current = els.startTerm.value;
+      const valid = START_TERM_KEYS.filter(k => cycle.includes(k.split("-")[1]));
+      els.startTerm.innerHTML = valid
+        .map(k => `<option value="${k}">${termLabel(k, program.termSystem)}<\/option>`)
+        .join("");
+      els.startTerm.value = valid.includes(current) ? current : valid[0];
+      if (els.rateIncreaseNote) {
+        const boundary = program.termSystem === "residential" ? "Summer 2027" : "June 2027";
+        els.rateIncreaseNote.textContent = `Tuition increases from $675 to $750/credit beginning in the ${boundary} term.`;
+      }
+    }
+
+    function capFor(program, gross, startTerm, creditsPerTerm = 3, rows = []) {
+      if (program.matchType === "fixedCap") return program.fixedCap;
+      if (program.matchType === "percentCap") return gross * program.percentCap;
+      if (program.matchType === "perTerm") return rows.length * program.perTermMatch;
+      if (program.matchType === "onlineHybrid") {
+        // $675 per term through March 2027, then 25% of each term's
+        // tuition from the June 2027 term (AY27-28) onward.
+        return rows.reduce((sum, row) => sum + (
+          row.term >= CONFIG.futureRateStart
+            ? row.tuition * program.percentAfter
+            : program.perTermMatch
+        ), 0);
+      }
+      return 0;
+    }
+
+    function setTheme(programKey) {
+      const t = CONFIG.programs[programKey].theme;
+      app.style.setProperty("--accent", t.accent);
+      app.style.setProperty("--accent-dark", t.accentDark);
+      app.style.setProperty("--accent-soft", t.accentSoft);
+      app.style.setProperty("--chart-match", "#bd8b41");
+    }
+
+    function polarToCartesian(cx, cy, r, angleDeg) {
+      const angleRad = (angleDeg - 90) * Math.PI / 180;
+      return { x: cx + (r * Math.cos(angleRad)), y: cy + (r * Math.sin(angleRad)) };
+    }
+
+    function describeSlice(cx, cy, r, startAngle, endAngle) {
+      
+      
+      if (endAngle - startAngle >= 359.999) {
+        endAngle = startAngle + 359.99;
+      }
+      const start = polarToCartesian(cx, cy, r, endAngle);
+      const end = polarToCartesian(cx, cy, r, startAngle);
+      const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+      return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
+    }
+
+    function positionPieLabel(el, percentage, startAngle, endAngle, radius = 65) {
+      if (!el) return;
+      if (percentage < 4) {
+        el.classList.add("hidden");
+        return;
+      }
+      el.classList.remove("hidden");
+      const mid = startAngle + ((endAngle - startAngle) / 2);
+      const p = polarToCartesian(110, 110, radius, mid);
+      el.setAttribute("x", p.x);
+      el.setAttribute("y", p.y);
+      el.textContent = `${Math.round(percentage)}%`;
+    }
+
+    function updatePieChart(studentPaid, fundsApplied, totalWtsAid, gross) {
+      const values = [
+        { value: Math.max(0, studentPaid), path: els.sliceStudent, label: els.labelStudent },
+        { value: Math.max(0, fundsApplied), path: els.sliceRaised, label: els.labelRaised },
+        { value: Math.max(0, totalWtsAid), path: els.sliceMatch, label: els.labelMatch }
+      ];
+
+      const total = Math.max(gross, 1);
+
+      // Label percentages must sum to 100: round the two support slices,
+      // then the student slice absorbs the rounding remainder. Rounding
+      // each slice independently produced pies like 25/25/49, and equal
+      // support amounts must keep equal labels.
+      const pcts = values.map(item => Math.round(item.value / total * 100));
+      if (values[0].value > 0) {
+        pcts[0] = Math.max(0, 100 - pcts[1] - pcts[2]);
+      }
+
+      // Slices are drawn from the same rounded percentages the labels
+      // show (max distortion about half a point, imperceptible), so a
+      // slice labeled 50% is exactly half the pie and equal labels are
+      // equal wedges. Drawing from raw values made the fully matched
+      // MDiv read 25/25/50 over a 49.2% gold slice, which looked wrong.
+      let angle = 0;
+      values.forEach((item, idx) => {
+        const start = angle;
+        const end = angle + (pcts[idx] / 100) * 360;
+        item.path.setAttribute("d", item.value > 0 && pcts[idx] > 0 ? describeSlice(110, 110, 100, start, end) : "");
+        positionPieLabel(item.label, pcts[idx], start, end);
+        angle = end;
+      });
+    }
+
+
+    function updateMacOnlyVisibility() {
+      const isMac = selectedProgram === "MAC";
+      [els.sbcScholarshipBlock, els.miniSbcCard, els.miniCreditsCard, els.summaryCreditsRecognizedRow, els.summaryCreditsRemainingRow, els.summarySbcFeeRow, els.summarySbcScholarshipRow].forEach(el => {
+        if (el) el.hidden = !isMac;
+      });
+      if (!isMac) {
+        sbcScholarshipIncluded = false;
+      }
+      if (els.sbcDetails) {
+        els.sbcDetails.hidden = !(isMac && sbcScholarshipIncluded);
+      }
+      if (els.sbcScholarshipYes && els.sbcScholarshipNo) {
+        els.sbcScholarshipYes.setAttribute("aria-pressed", isMac && sbcScholarshipIncluded);
+        els.sbcScholarshipNo.setAttribute("aria-pressed", !(isMac && sbcScholarshipIncluded));
+      }
+    }
+
+    function selectSbcScholarship(value) {
+      sbcScholarshipIncluded = value;
+      updateMacOnlyVisibility();
+      calculate();
+    }
+
+
+    function getSelectedSbcCourses() {
+      return Array.from(root.querySelectorAll(".sbc-course:checked")).map(input => ({
+        code: input.value,
+        title: input.dataset.title,
+        credits: Number(input.dataset.credits || 0)
+      }));
+    }
+
+    function getSelectedSbcCredits() {
+      return getSelectedSbcCourses().reduce((sum, course) => sum + course.credits, 0);
+    }
+
+    function updateSbcCourseAvailability(changedInput = null) {
+      const selectedCredits = getSelectedSbcCredits();
+
+      if (selectedCredits > CONFIG.sbcMaxCredits && changedInput) {
+        changedInput.checked = false;
+      }
+
+      const currentCredits = getSelectedSbcCredits();
+      root.querySelectorAll(".sbc-course").forEach(input => {
+        const credits = Number(input.dataset.credits || 0);
+        const wouldExceed = !input.checked && currentCredits + credits > CONFIG.sbcMaxCredits;
+        input.disabled = wouldExceed;
+        input.closest(".course-option")?.classList.toggle("disabled", wouldExceed);
+      });
+
+      const selectedCourses = getSelectedSbcCourses();
+      if (els.sbcSelectionNote) {
+        els.sbcSelectionNote.textContent = `Selected: ${num(currentCredits)} credits across ${selectedCourses.length} ${selectedCourses.length === 1 ? "course" : "courses"}. Up to 15 credits may be recognized.`;
+      }
+    }
+
+
+    function comparisonGroupForProgram(programKey) {
+      if (programKey === "MDiv") return "mdiv";
+      if (programKey === "MAC") return "counseling";
+      if (programKey === "MAR" || programKey === "MATS") return "ma";
+      return "ma";
+    }
+
+    function formatCredits(value) {
+      return typeof value === "number" ? num(value) : value;
+    }
+
+    function buildComparisonTerms(totalCredits, creditsPerTerm, startTerm) {
+      const terms = [];
+      let remaining = totalCredits;
+      let term = startTerm;
+      while (remaining > 0) {
+        const credits = Math.min(remaining, creditsPerTerm);
+        terms.push({ term, credits });
+        remaining -= credits;
+        term = nextTerm(term);
+      }
+      return terms;
+    }
+
+    function mandatoryFeesForItem(item, totalCredits, creditsPerTerm, startTerm) {
+      const terms = buildComparisonTerms(totalCredits, creditsPerTerm, startTerm);
+
+      if (item.feeModel === "rtsGlobal") return totalCredits * 60;
+      if (item.feeModel === "covenant") return terms.length * 310 + Number(item.oneTimeFee || 0);
+
+      if (item.feeModel === "dts") {
+        return terms.reduce((sum, row) => {
+          const month = Number(row.term.split("-")[1]);
+          const fallOrSpring = month === 9 || month === 3;
+          const generalAndTech = fallOrSpring ? 350 : row.credits * 55;
+          return sum + generalAndTech + 100;
+        }, 0);
+      }
+
+      if (item.feeModel === "sbts") {
+        const technologyFees = terms.length * 100;
+        const semesterKeys = new Set(terms.map(row => {
+          const [year, month] = row.term.split("-").map(Number);
+          if (month === 9 || month === 1) return `${month === 1 ? year - 1 : year}-fall`;
+          if (month === 3) return `${year}-spring`;
+          return `${year}-summer`;
+        }));
+        return technologyFees + semesterKeys.size * 200;
+      }
+
+      if (item.feeModel === "gcts") {
+        return terms.reduce((sum, row) => {
+          const month = Number(row.term.split("-")[1]);
+          return sum + (month === 1 ? 100 : 350);
+        }, 0);
+      }
+
+      return Number(item.oneTimeFee || 0);
+    }
+
+    function marketTotalForCredits(item, totalCredits, creditsPerTerm, startTerm) {
+      const fees = mandatoryFeesForItem(item, totalCredits, creditsPerTerm, startTerm);
+      const tuition = totalCredits * item.rate;
+      const total = tuition + fees;
+      const effectiveRate = totalCredits > 0 ? total / totalCredits : 0;
+      return { tuition, fees, total, effectiveRate };
+    }
+
+    function formatMarketTotal(item, creditsPerTerm, startTerm) {
+      if (item.creditRange) {
+        const low = marketTotalForCredits(item, item.creditRange[0], creditsPerTerm, startTerm);
+        const high = marketTotalForCredits(item, item.creditRange[1], creditsPerTerm, startTerm);
+        return {
+          display: `${money(low.total)}–${money(high.total)}`,
+          effectiveRateDisplay: `${money(low.effectiveRate)}–${money(high.effectiveRate)} / cr`,
+          feeDisplay: `${money(low.fees)}–${money(high.fees)} fees included`
+        };
+      }
+
+      const result = marketTotalForCredits(item, Number(item.credits), creditsPerTerm, startTerm);
+      return {
+        display: money(result.total),
+        effectiveRateDisplay: `${money(result.effectiveRate)} / cr`,
+        feeDisplay: `${money(result.fees)} fees included`
+      };
+    }
+
+    function renderMarketComparison(wtsGross, wtsNet, program, selectedProgram, wtsCreditsRemaining, creditsPerTerm, startTerm) {
+      if (!els.comparisonTable) return;
+
+      const group = comparisonGroupForProgram(selectedProgram);
+      const rows = MARKET_COMPARISONS[group] || [];
+
+      const selectedLabel = group === "mdiv"
+        ? "MDiv / pastoral ministry comparison"
+        : group === "counseling"
+          ? "Counseling program comparison"
+          : "MA / theological studies comparison";
+      els.comparisonTypeLabel.textContent = selectedLabel;
+
+      const subtitle = group === "counseling"
+        ? "Comparable online or mostly online counseling programs using an effective all-in per-credit charge."
+        : group === "mdiv"
+          ? "Comparable online or mostly online MDiv and pastoral ministry programs using an effective all-in per-credit charge."
+          : "Comparable online or mostly online theological studies programs using an effective all-in per-credit charge.";
+      els.comparisonSubtitle.textContent = subtitle;
+
+      els.comparisonCallout.textContent = `Programs are ranked from lowest to highest estimated tuition and mandatory fees for the full program. Your WTS ${program.name} position updates automatically based on the personalized estimate above.`;
+
+      const entries = [
+        {
+          isWts: true,
+          institution: "Westminster Theological Seminary",
+          program: program.name,
+          creditsDisplay: num(wtsCreditsRemaining),
+          effectiveRateDisplay: `${money(CONFIG.currentRate)} / cr`,
+          totalDisplay: money(wtsNet),
+          sortTotal: wtsNet,
+          rateNote: "No recurring term fees",
+          totalNote: "Personalized estimate",
+          note: "Online or mostly online WTS pathway, after entered support and WTS match. WTS charges no recurring term fees.",
+          sourceUrl: null
+        },
+        ...rows.map(item => {
+          const total = formatMarketTotal(item, creditsPerTerm, startTerm);
+
+          let sortTotal;
+          if (item.creditRange) {
+            const low = marketTotalForCredits(item, item.creditRange[0], creditsPerTerm, startTerm);
+            const high = marketTotalForCredits(item, item.creditRange[1], creditsPerTerm, startTerm);
+            sortTotal = (low.total + high.total) / 2;
+          } else {
+            sortTotal = marketTotalForCredits(item, Number(item.credits), creditsPerTerm, startTerm).total;
+          }
+
+          return {
+            isWts: false,
+            institution: item.institution,
+            program: item.program,
+            creditsDisplay: formatCredits(item.credits),
+            effectiveRateDisplay: total.effectiveRateDisplay,
+            totalDisplay: total.display,
+            sortTotal,
+            rateNote: "Tuition + recurring fees",
+            totalNote: total.feeDisplay,
+            note: item.note,
+            sourceUrl: item.sourceUrl
+          };
+        })
+      ];
+
+      entries.sort((a, b) => {
+        if (a.sortTotal !== b.sortTotal) return a.sortTotal - b.sortTotal;
+        return a.institution.localeCompare(b.institution);
+      });
+
+      els.comparisonTable.innerHTML = entries.map((entry, index) => `
+        <tr class="${entry.isWts ? "comparison-row-current" : ""}">
+          <td class="money"><strong>${index + 1}<\/strong><\/td>
+          <td>${entry.institution}<\/td>
+          <td>
+            ${entry.program}
+            <div class="comparison-program-note">
+              ${entry.isWts
+                ? "Your current estimate in this tool"
+                : `<a class="comparison-source-link" href="${entry.sourceUrl}" target="_blank" rel="noopener">Source<\/a>`}
+            <\/div>
+          <\/td>
+          <td class="money">${entry.creditsDisplay}<\/td>
+          <td class="money">
+            <strong>${entry.effectiveRateDisplay}<\/strong>
+            <div class="comparison-program-note">${entry.rateNote}<\/div>
+          <\/td>
+          <td class="money">
+            <strong>${entry.totalDisplay}<\/strong>
+            <div class="comparison-program-note">${entry.totalNote}<\/div>
+          <\/td>
+          <td>${entry.note}<\/td>
+        <\/tr>
+      `).join("");
+    }
+
+    const MATCH_FOOTNOTE = "*Westminster only matches support from churches, ministry partners, employers, family, and friends. Funds from the GI Bill, denominational scholarships, and other sources still lower your estimated cost but do not count toward the match.";
+
+    function setResultFootnote(parts) {
+      const text = parts.filter(Boolean).join(" ");
+      els.resultFootnote.textContent = text;
+      els.resultFootnote.hidden = !text;
+    }
+
+    // Whether the Outside Support tile carries the asterisk pointing at the
+    // match footnote.
+    function setOutsideSupportAsterisk(hasMatch) {
+      els.miniRemainingLabel.textContent = hasMatch ? "Outside Support*" : "Outside Support";
+      // The match-eligibility sentence in the step 2 note and the
+      // applies-automatically sentence in the scholarship annotation only
+      // apply while a matching scholarship is in play.
+      if (els.matchEligibilityNote) els.matchEligibilityNote.hidden = !hasMatch;
+      if (els.scholarshipMatchNote) els.scholarshipMatchNote.hidden = !hasMatch;
+    }
+
+    // The maximum outside support the current matching scholarship will
+    // fully match; 0 when no match applies. Drives the max-match preset.
+    let lastMatchCap = 0;
+
+    function updateMaxMatchButton() {
+      if (!els.maxMatchBtn) return;
+      const cap = Math.round(lastMatchCap);
+      els.maxMatchBtn.hidden = cap <= 0;
+      els.maxMatchBtn.textContent = `Maximum Matching Scholarship amount: ${money(cap)}`;
+    }
+
+    function calculate() {
+      updateMacOnlyVisibility();
+      const program = CONFIG.programs[selectedProgram];
+      // DMin's tuition figure is itself an estimate (coursework +
+      // continuation + thesis fees), so its tile carries an asterisk
+      // pointing at the footnote that unpacks it.
+      if (els.miniGrossLabel) {
+        els.miniGrossLabel.textContent = selectedProgram === "DMin"
+          ? "Tuition Before Support*" : "Tuition Before Support";
+      }
+      if (els.mixProgram) {
+        const badge = kind => kind === "campus"
+          ? '<span class="online-badge campus">On Campus<\/span>'
+          : '<span class="online-badge">Online<\/span>';
+        const badges = program.funded || program.modality === "campus" ? badge("campus")
+          : program.modality === "both" ? `${badge("online")} ${badge("campus")}`
+          : badge("online");
+        els.mixProgram.innerHTML = `<span class="mix-program-name">${program.displayTitle || `${program.fullName} (${program.name})`}<\/span> ${badges}`;
+      }
+
+      if (program.funded) {
+        // On-campus MDiv and MAR: tuition is 100% funded for admitted
+        // students, so there is nothing to estimate. The scholarship
+        // value is the annual rate times the program length (per
+        // admissions: no per-credit price), and the cost is $0.
+        const gross = program.annualRate * program.years;
+        const fundedNet = 0;
+        lastMatchCap = 0;
+        updateMaxMatchButton();
+        updatePieChart(fundedNet, 0, gross, gross + fundedNet);
+        els.netPrice.textContent = money(fundedNet);
+        const yearsWord = { 3: "three", 4: "four" }[program.years] || String(program.years);
+        setResultFootnote([
+          `Tuition for the on-campus ${program.displayTitle || program.fullName} is 100% funded for admitted full-time students, thanks to the generosity of Westminster's donor community. At ${money(program.annualRate)}/year, the scholarship is worth ${money(gross)} over ${yearsWord} years.`,
+          `A ${money(CONFIG.residentialCommitmentFee)} Commitment Fee is due at admission and covers the first four terms of the ${money(CONFIG.residentialTermFee)} per-term Community Life Fee; plan for that fee in the remaining terms.`
+        ]);
+        els.miniMatch.textContent = money(gross);
+        els.miniRemainingCard.hidden = true;
+        els.miniRemaining.textContent = "$0"; // no outside support for funded programs
+        els.miniRemainingCard.classList.remove("match-opportunity");
+        els.miniGross.textContent = money(gross);
+        els.legendStudent.textContent = money(fundedNet);
+        els.legendRaised.textContent = "$0";
+        els.legendMatch.textContent = money(gross);
+        els.summaryModeLabel.textContent = "Tuition 100% funded";
+        els.summaryGross.textContent = money(gross);
+        els.summaryRaised.textContent = "-$0";
+        els.summaryMatch.textContent = `-${money(gross)}`;
+        els.summaryRemainingMatch.textContent = "$0";
+        els.summaryRemainingMatchRow.classList.remove("match-opportunity");
+        els.summaryNet.textContent = "$0";
+        els.termCountLabel.textContent = "Tuition 100% funded";
+        els.termTable.innerHTML = `
+          <tr>
+            <td colspan="6">Tuition for the on-campus ${program.name} is 100% funded for admitted students, so there is no term-by-term cost to plan for.<\/td>
+          <\/tr>
+        `;
+        els.emailLink.href = `mailto:?subject=${encodeURIComponent(`WTS on-campus ${program.name} tuition`)}&body=${encodeURIComponent(`Tuition for the on-campus ${program.fullName} (${program.name}) is 100% funded for admitted students. There is no out-of-pocket tuition.`)}`;
+        return;
+      }
+
+      if (program.coursePriced) {
+        // ThM, DMin, PhD: per-course pricing, no term-by-term rate schedule.
+        // DMin follows its published program card: total true cost, an
+        // automatic baseline scholarship, then ministry partner payments
+        // matched dollar-for-dollar up to the partnership match cap.
+        const fundsRaisedRequested = Math.max(0, Number(els.fundsRaised.value || 0));
+        const gross = program.trueCost || program.courses * program.courseRate;
+        const baseline = program.baselinePct ? gross * program.baselinePct : 0;
+        const fundsApplied = Math.min(fundsRaisedRequested, Math.max(0, gross - baseline));
+        const matchCap = program.matchPct ? gross * program.matchPct : 0;
+        lastMatchCap = matchCap;
+        updateMaxMatchButton();
+        const match = Math.min(fundsApplied, matchCap, Math.max(0, gross - baseline - fundsApplied));
+        const totalWtsAid = baseline + match;
+        const totalOutOfPocket = Math.max(0, gross - fundsApplied - totalWtsAid);
+        const remainingEligibleMatch = Math.max(0, matchCap - match);
+
+        updatePieChart(totalOutOfPocket, fundsApplied, totalWtsAid, gross);
+
+        els.netPrice.textContent = money(totalOutOfPocket);
+        const communityFeeSentence = `Residential students also pay a ${money(CONFIG.residentialTermFee)} per-term Community Life Fee, not included in this estimate.`;
+        const footnotes = {
+          ThM: [MATCH_FOOTNOTE, `The estimate excludes other program fees, such as the $750 matriculation fee and the $1,550 thesis fee for thesis-track students. ${communityFeeSentence}`],
+          DMin: [`*Tuition reflects coursework (8 courses at $3,650 each), one year of the $1,750 continuation fee, and the $2,600 thesis fee, for $33,550 total. Students who take longer to finish pay the continuation fee for each additional year. The Ministry Partnership Match applies dollar-for-dollar to ministry partner (e.g. church) payments, up to 20% of the total program cost. The baseline scholarship is applied automatically.`],
+          PhD: [`PhD scholarships are determined individually by the committee and are not included in this estimate. The estimate excludes other program fees, such as the $1,400 matriculation fee and the $3,600 dissertation fee. ${communityFeeSentence}`]
+        };
+        setResultFootnote(footnotes[selectedProgram] || []);
+        setOutsideSupportAsterisk(matchCap > 0);
+        els.miniMatch.textContent = money(totalWtsAid);
+        els.miniGross.textContent = money(gross);
+        els.miniRemainingCard.hidden = false;
+        els.miniRemaining.textContent = money(fundsApplied);
+        els.miniRemainingCard.classList.remove("match-opportunity");
+        els.legendStudent.textContent = money(totalOutOfPocket);
+        els.legendRaised.textContent = money(fundsApplied);
+        els.legendMatch.textContent = money(totalWtsAid);
+        return;
+      }
+
+      els.miniRemainingCard.hidden = false;
+      const creditsPerTerm = els.creditsPerTerm.value === "custom"
+        ? Math.max(1, Number(els.customCredits.value || 3))
+        : Number(els.creditsPerTerm.value);
+
+      const startTerm = els.startTerm.value;
+      const fundsRaisedRequested = Math.max(0, Number(els.fundsRaised.value || 0));
+      const additionalAid = 0;
+      const selectedSbcCourses = selectedProgram === "MAC" ? getSelectedSbcCourses() : [];
+      const sbcCourses = selectedSbcCourses.length;
+      const sbcCoveragePct = selectedProgram === "MAC" ? Math.min(100, Math.max(0, Number(els.sbcCoverage?.value || 100))) : 0;
+      const sbcRecognitionFee = sbcCourses * CONFIG.sbcRecognitionFeePerCourse;
+      const sbcCreditsRecognized = selectedProgram === "MAC" ? selectedSbcCourses.reduce((sum, course) => sum + course.credits, 0) : 0;
+      const wtsCreditsRemaining = Math.max(0, program.credits - sbcCreditsRecognized);
+      const sbcRecognitionScholarship = selectedProgram === "MAC" && sbcScholarshipIncluded ? sbcRecognitionFee * (sbcCoveragePct / 100) : 0;
+      const sbcRecognitionFeeStudentPaid = Math.max(0, sbcRecognitionFee - sbcRecognitionScholarship);
+      const rows = buildTerms(wtsCreditsRemaining, creditsPerTerm, startTerm, program.termSystem);
+      const gross = rows.reduce((sum, row) => sum + row.tuition, 0);
+
+      // One scholarship at a time: a percent-tuition scholarship (e.g. the
+      // Advancing Women's Ministry Scholarship) replaces the matching
+      // scholarship entirely, so outside support still reduces the cost but
+      // draws no match. Outside support above a match cap also still counts:
+      // every raised dollar is applied, only the match itself is capped.
+      const scholarship = activeScholarship();
+      const isPercentScholarship = !!(scholarship && scholarship.calc.type === "percentTuition");
+      const scholarshipAid = isPercentScholarship ? gross * scholarship.calc.pct : 0;
+      const fundsApplied = Math.min(fundsRaisedRequested, Math.max(0, gross - scholarshipAid));
+      const matchCap = isPercentScholarship ? 0 : capFor(program, gross, startTerm, creditsPerTerm, rows);
+      lastMatchCap = matchCap;
+      updateMaxMatchButton();
+      const standardMatch = scholarshipIncluded && !isPercentScholarship
+        ? Math.min(fundsApplied, matchCap, Math.max(0, gross - fundsApplied))
+        : 0;
+      const totalWtsAid = scholarshipIncluded
+        ? Math.min(scholarshipAid + standardMatch + additionalAid, Math.max(0, gross - fundsApplied))
+        : 0;
+      const studentPaid = Math.max(0, gross - fundsApplied - totalWtsAid);
+      const totalOutOfPocket = studentPaid + sbcRecognitionFeeStudentPaid;
+      const remainingEligibleMatch = scholarshipIncluded ? Math.max(0, matchCap - standardMatch) : 0;
+
+      const pieStudentPaid = totalOutOfPocket;
+      const pieWtsScholarshipSupport = totalWtsAid + sbcRecognitionScholarship;
+      const pieTotal = gross + sbcRecognitionFee;
+
+      updatePieChart(pieStudentPaid, fundsApplied, pieWtsScholarshipSupport, pieTotal);
+
+      els.netPrice.textContent = money(totalOutOfPocket);
+      // The match-source footnote only applies while a matching scholarship
+      // is the selected scholarship.
+      const hasMatch = !isPercentScholarship && matchCap > 0;
+      const footnoteParts = [hasMatch ? MATCH_FOOTNOTE : ""];
+      if (program.certificate) {
+        if (program.stackable) {
+          footnoteParts.push("The three Theological Studies Certificate emphases plus three electives stack into a full MATS.");
+        }
+      } else {
+        footnoteParts.push(`A ${money(CONFIG.onlineEnrollmentDeposit)} enrollment deposit is due when you enroll and is applied toward tuition.`);
+      }
+      setResultFootnote(footnoteParts);
+      setOutsideSupportAsterisk(hasMatch);
+      // Tiles use the same fee-inclusive figures as the pie: tuition
+      // before support counts the SBC recognition fee for every course
+      // selected for transfer (the fee is owed regardless of the credit
+      // reduction), and WTS support counts the fee scholarship, so the
+      // four tiles keep their arithmetic identity.
+      els.miniMatch.textContent = money(pieWtsScholarshipSupport);
+      els.miniRemaining.textContent = money(fundsApplied);
+      els.miniGross.textContent = money(pieTotal);
+      els.miniCreditsRemaining.textContent = num(wtsCreditsRemaining);
+      els.miniSbcScholarship.textContent = money(sbcRecognitionScholarship);
+      els.sbcCoverageLabel.textContent = `${sbcCoveragePct}%`;
+      els.sbcFeeNote.textContent = `Recognition fee: ${money(sbcRecognitionFee)} for ${sbcCourses} selected ${sbcCourses === 1 ? "course" : "courses"}. Estimated possible recognition fee scholarship: ${money(sbcRecognitionScholarship)}.`;
+      updateSbcCourseAvailability();
+
+      els.summaryModeLabel.textContent = "Matching scholarship applied automatically";
+      els.summaryCreditsRecognized.textContent = num(sbcCreditsRecognized);
+      els.summaryCreditsRemaining.textContent = num(wtsCreditsRemaining);
+      els.summaryGross.textContent = money(gross);
+      els.summaryRaised.textContent = `-${money(fundsApplied)}`;
+      els.summaryMatch.textContent = `-${money(totalWtsAid)}`;
+      els.summaryRemainingMatch.textContent = scholarshipIncluded ? money(remainingEligibleMatch) : "$0";
+      const showMatchOpportunity = scholarshipIncluded && remainingEligibleMatch > 0;
+      els.miniRemainingCard.classList.remove("match-opportunity");
+      els.summaryRemainingMatchRow.classList.toggle("match-opportunity", showMatchOpportunity);
+      els.summarySbcFee.textContent = money(sbcRecognitionFee);
+      els.summarySbcScholarship.textContent = `-${money(sbcRecognitionScholarship)}`;
+      els.summaryNet.textContent = money(totalOutOfPocket);
+      renderMarketComparison(gross, totalOutOfPocket, program, selectedProgram, wtsCreditsRemaining, creditsPerTerm, startTerm);
+
+      els.legendStudent.textContent = money(pieStudentPaid);
+      els.legendRaised.textContent = money(fundsApplied);
+      els.legendMatch.textContent = money(pieWtsScholarshipSupport);
+
+      els.termCountLabel.textContent = `${rows.length} ${rows.length === 1 ? "term" : "terms"}`;
+
+      const raisedRatio = gross > 0 ? fundsApplied / gross : 0;
+      const matchRatio = gross > 0 ? totalWtsAid / gross : 0;
+
+      els.termTable.innerHTML = rows.map(row => {
+        const raised = row.tuition * raisedRatio;
+        const match = row.tuition * matchRatio;
+        const net = Math.max(0, row.tuition - raised - match);
+        return `
+          <tr>
+            <td>${row.label || termLabel(row.term, program.termSystem)}<\/td>
+            <td class="money">${num(row.credits)}<\/td>
+            <td class="money">${money(row.tuition)}<\/td>
+            <td class="money">${money(raised)}<\/td>
+            <td class="money">${money(match)}<\/td>
+            <td class="money"><strong>${money(net)}<\/strong><\/td>
+          <\/tr>
+        `;
+      }).join("");
+
+      const subject = encodeURIComponent(`WTS ${program.name} tuition estimate`);
+      const body = encodeURIComponent(
+        `WTS ${program.name} Tuition Estimate\n\n` +
+        `Program: ${program.name}\n` +
+        `Program credits: ${program.credits}\n` +
+        `SBC courses selected: ${selectedSbcCourses.map(course => `${course.code} (${course.credits} credits)`).join(", ") || "None"}\n` +
+        `SBC credits recognized: ${num(sbcCreditsRecognized)}\n` +
+        `WTS credits remaining: ${num(wtsCreditsRemaining)}\n` +
+        `WTS tuition remaining: ${money(gross)}\n` +
+        `SBC recognition fee: ${money(sbcRecognitionFee)}\n` +
+        `Possible SBC recognition fee scholarship: ${money(sbcRecognitionScholarship)}\n` +
+        `Support raised: ${money(fundsApplied)}\n` +
+        `WTS matching scholarship: Automatically applied to eligible support\n` +
+        `WTS matching scholarship: ${money(totalWtsAid)}\n` +
+        `Estimated cost after support: ${money(totalOutOfPocket)}\n\n` +
+        `This estimate is for planning purposes only and is not a final scholarship award, financial aid offer, or bill. Matching scholarships and SBC recognition fee scholarships are limited, require application or review, and are not guaranteed.`
+      );
+      els.emailLink.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+    function preparePrint() {
+      const program = CONFIG.programs[selectedProgram];
+      const selectedSbcCredits = selectedProgram === "MAC" ? getSelectedSbcCredits() : 0;
+      const creditsRemaining = Math.max(0, program.credits - selectedSbcCredits);
+      const paceOption = els.creditsPerTerm.options[els.creditsPerTerm.selectedIndex];
+
+      const creditsPerTerm = els.creditsPerTerm.value === "custom"
+        ? Math.max(1, Number(els.customCredits.value || 3))
+        : Number(els.creditsPerTerm.value);
+      const completionRows = buildTerms(
+        creditsRemaining,
+        creditsPerTerm,
+        els.startTerm.value,
+        program.termSystem
+      );
+      const completionTerm = completionRows.length
+        ? completionRows[completionRows.length - 1].term
+        : els.startTerm.value;
+
+      if (els.printProgram) els.printProgram.textContent = program.name;
+      if (els.printCredits) els.printCredits.textContent = num(creditsRemaining);
+      if (els.printStartTerm) els.printStartTerm.textContent = termLabel(els.startTerm.value, program.termSystem);
+      if (els.printCompletionTerm) els.printCompletionTerm.textContent = termLabel(completionTerm, program.termSystem);
+      if (els.printPace) {
+        els.printPace.textContent = els.creditsPerTerm.value === "custom"
+          ? `${num(creditsPerTerm)} credits per term`
+          : paceOption.textContent.split(" / ")[0];
+      }
+      if (els.printDate) {
+        els.printDate.textContent = new Intl.DateTimeFormat("en-US", {
+          month: "long", day: "numeric", year: "numeric"
+        }).format(new Date());
+      }
+      // embedded: leave the host page's <title> alone
+    }
+
+    window.addEventListener("beforeprint", preparePrint);
+
+    const programButtons = {
+      MATS: els.matsBtn, MAC: els.macBtn, MDiv: els.mdivBtn, MAR: els.marBtn,
+      CertTSC: els.certTSCBtn, CertBLC: els.certBLCBtn,
+      ThM: els.thmBtn, MDivCampus: els.mdivCampusBtn, MDivFellows: els.mdivFellowsBtn,
+      MARCampus: els.marCampusBtn, DMin: els.dminBtn, PhD: els.phdBtn
+    };
+
+    // Program category tabs, mirroring the live page's
+    // On-Campus / Online / Advanced Degree Programs split.
+    let selectedBucket = "online";
+
+    function selectBucket(bucket) {
+      selectedBucket = bucket;
+      root.querySelectorAll(".bucket-tab").forEach(tab => {
+        tab.setAttribute("aria-pressed", String(tab.dataset.bucket === bucket));
+      });
+      Object.entries(programButtons).forEach(([key, btn]) => {
+        if (btn) btn.hidden = CONFIG.programs[key].bucket !== bucket;
+      });
+      if (CONFIG.programs[selectedProgram].bucket !== bucket) {
+        const first = Object.keys(CONFIG.programs)
+          .find(k => CONFIG.programs[k].bucket === bucket);
+        selectProgram(first);
+      }
+    }
+
+    // Analytics: push structured interaction events for the site's
+    // Google Tag Manager (ingested by GA4/WebFX). Event schema is
+    // documented in webflow/ANALYTICS_EVENTS.md. A silent no-op when
+    // GTM is absent (mockups, standalone page, local dev), and it must
+    // never break the calculator.
+    function track(action, params) {
+      try {
+        const dl = window.dataLayer;
+        if (!dl || typeof dl.push !== "function") return;
+        dl.push(Object.assign(
+          { event: "wts_tuition_savings_calculator", estimator_action: action },
+          params || {}
+        ));
+      } catch (e) { /* analytics failures are not the calculator's problem */ }
+    }
+
+    let selectedScholarshipId = null;
+
+    function scholarshipOptions(key) {
+      return (SCHOLARSHIPS[key] || []).filter(s => s.calc);
+    }
+
+    function activeScholarship() {
+      const options = scholarshipOptions(selectedProgram);
+      return options.find(s => s.id === selectedScholarshipId) || options[0] || null;
+    }
+
+    function renderScholarships(key) {
+      if (!els.scholarshipList) return;
+      const entries = SCHOLARSHIPS[key] || [];
+      const options = entries.filter(s => s.calc);
+      const notes = entries.filter(s => !s.calc);
+      const chosen = options.find(s => s.id === selectedScholarshipId) || options[0] || null;
+      selectedScholarshipId = chosen ? chosen.id : null;
+
+      // Entries without radios read as notes, under a small label so they
+      // are clearly informational rather than broken options.
+      const noteHead = notes.length === 0 ? ""
+        : key === "DMin" ? "Applied automatically:"
+        : options.length ? "Also available:"
+        : "";
+
+      els.scholarshipList.innerHTML =
+        options.map(s => `
+          <li class="scholarship-option">
+            <label>
+              <input type="radio" name="scholarshipChoice" value="${s.id}"${s.id === selectedScholarshipId ? " checked" : ""}>
+              <span><strong>${s.name}:<\/strong> ${s.detail}<\/span>
+            <\/label>
+          <\/li>`).join("") +
+        (noteHead ? `<li class="scholarship-note-head">${noteHead}<\/li>` : "") +
+        notes.map(s => `<li class="scholarship-note"><strong>${s.name}:<\/strong> ${s.detail}<\/li>`).join("");
+
+      // Certificates have no Westminster scholarships, so the
+      // select-a-scholarship guidance does not apply.
+      if (els.scholarshipAnnotation) {
+        els.scholarshipAnnotation.hidden = !!CONFIG.programs[key].certificate;
+      }
+      // "Select the Westminster scholarship..." only makes sense when
+      // there are options to select (ThM, DMin, and PhD have none).
+      if (els.scholarshipSelectNote) {
+        els.scholarshipSelectNote.hidden = options.length === 0;
+      }
+
+      els.scholarshipList.querySelectorAll('input[name="scholarshipChoice"]').forEach(input => {
+        input.addEventListener("change", () => {
+          selectedScholarshipId = input.value;
+          track("scholarship_select", { scholarship: input.value, program: selectedProgram });
+          calculate();
+        });
+      });
+    }
+
+    function selectProgram(key) {
+      selectedProgram = key;
+      selectedScholarshipId = null; // back to the program's default scholarship
+      setTheme(key);
+
+      Object.keys(programButtons).forEach(k => app.classList.remove(`program-${k.toLowerCase()}`));
+      app.classList.add(`program-${key.toLowerCase()}`);
+      app.classList.toggle("funded-mode", !!CONFIG.programs[key].funded);
+      // With the inputs panel hidden for funded programs, the results card
+      // becomes step 2 rather than step 3.
+      if (els.resultsStepLabel) {
+        els.resultsStepLabel.textContent = CONFIG.programs[key].funded ? "Step 2" : "Step 3";
+      }
+      // Course-priced programs bill per course, so the per-credit start-term
+      // rate increase and pace options do not apply.
+      app.classList.toggle("course-priced-mode", !!CONFIG.programs[key].coursePriced);
+      if (els.fundsRaisedLabel) {
+        els.fundsRaisedLabel.textContent = key === "DMin"
+          ? "Ministry partner (e.g. church) payments over full program*"
+          : "Additional support from outside resources*";
+      }
+
+      Object.entries(programButtons).forEach(([k, btn]) => {
+        if (!btn) return;
+        btn.setAttribute("aria-pressed", k === key);
+        btn.classList.toggle("active", k === key);
+      });
+
+      renderScholarships(key);
+      refreshStartTermOptions(CONFIG.programs[key]);
+      updateMacOnlyVisibility();
+      calculate();
+    }
+
+    Object.entries(programButtons).forEach(([key, btn]) => {
+      if (btn) btn.addEventListener("click", () => {
+        track("program_select", { program: key, modality: CONFIG.programs[key].bucket });
+        selectProgram(key);
+      });
+    });
+    root.querySelectorAll(".bucket-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        track("modality_select", { modality: tab.dataset.bucket });
+        selectBucket(tab.dataset.bucket);
+      });
+    });
+    // "Also online" / "Also on campus" chips jump to the same degree in
+    // the other modality, which lives on a different bucket tab.
+    root.querySelectorAll(".alt-modality[data-jump]").forEach(chip => {
+      chip.addEventListener("click", event => {
+        event.stopPropagation();
+        const key = chip.dataset.jump;
+        track("program_select", { program: key, modality: CONFIG.programs[key].bucket, source: "modality_chip" });
+        selectBucket(CONFIG.programs[key].bucket);
+        selectProgram(key);
+      });
+    });
+    selectBucket(selectedBucket);
+    els.sbcScholarshipYes.addEventListener("click", () => selectSbcScholarship(true));
+    els.sbcScholarshipNo.addEventListener("click", () => selectSbcScholarship(false));
+
+    if (els.maxMatchBtn) {
+      els.maxMatchBtn.addEventListener("click", () => {
+        els.fundsRaised.value = Math.round(lastMatchCap);
+        track("support_amount", { amount: Math.round(lastMatchCap), source: "max_match", program: selectedProgram });
+        calculate();
+      });
+    }
+
+    root.querySelectorAll(".quick-amount:not(.max-match)").forEach(button => {
+      button.addEventListener("click", () => {
+        els.fundsRaised.value = button.dataset.amount;
+        track("support_amount", { amount: Number(button.dataset.amount), source: "quick", program: selectedProgram });
+        calculate();
+      });
+    });
+
+    [els.fundsRaised, els.startTerm, els.creditsPerTerm, els.customCredits, els.sbcCoverage].forEach(el => {
+      if (!el) return;
+      el.addEventListener("input", calculate);
+      el.addEventListener("change", calculate);
+    });
+
+    els.creditsPerTerm.addEventListener("change", () => {
+      els.customCreditsField.style.display = els.creditsPerTerm.value === "custom" ? "block" : "none";
+      calculate();
+    });
+
+    els.fundsRaised.addEventListener("change", () => {
+      track("support_amount", {
+        amount: Math.max(0, Number(els.fundsRaised.value || 0)),
+        source: "typed",
+        program: selectedProgram
+      });
+    });
+
+    els.startTerm.addEventListener("change", () => {
+      track("start_term", { term: els.startTerm.value, program: selectedProgram });
+    });
+
+    const contactButton = root.querySelectorAll(".contact-cta .contact-button")[0];
+    if (contactButton) {
+      contactButton.addEventListener("click", () => {
+        track("contact_click", {
+          program: selectedProgram,
+          estimated_net: Number(els.netPrice.textContent.replace(/[^0-9.-]/g, "")) || 0
+        });
+      });
+    }
+
+
+    root.querySelectorAll(".sbc-course").forEach(input => {
+      input.addEventListener("change", () => {
+        updateSbcCourseAvailability(input);
+        calculate();
+      });
+    });
+
+    app.classList.add(`program-${selectedProgram.toLowerCase()}`);
+    setTheme(selectedProgram);
+    renderScholarships(selectedProgram);
+    updateMacOnlyVisibility();
+    calculate();
+    preparePrint();
+  
+  }
+
+  function boot(host) {
+    if (host.shadowRoot) return; // already booted
+    ensureFonts();
+    var shadow = host.attachShadow({ mode: "open" });
+    var style = document.createElement("style");
+    style.textContent = CSS;
+    shadow.appendChild(style);
+    var app = document.createElement("div");
+    app.className = "wts-estimator-app";
+    app.innerHTML = HTML;
+    shadow.appendChild(app);
+    runCalculator(shadow, app);
+  }
+
+  function init() {
+    var host = document.getElementById("wts-cost-estimator");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "wts-cost-estimator";
+      if (currentScript && currentScript.parentNode) {
+        currentScript.parentNode.insertBefore(host, currentScript);
+      } else {
+        document.body.appendChild(host);
+      }
+    }
+    boot(host);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+    </script>
+  </div>
+</body>
+</html>
